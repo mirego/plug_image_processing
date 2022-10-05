@@ -1,0 +1,21 @@
+# App artifacts
+/_build
+/db
+/deps
+/*.ez
+/cover
+/tmp
+/doc
+
+# Generated on crash by the VM
+erl_crash.dump
+
+# Since we are building assets from assets/, we ignore priv/static
+/priv/static
+
+# Local environment variable files
+.env.local
+.env.*.local
+
+# Sobelow version breadcrumb
+.sobelow

@@ -1,17 +1,43 @@
 defmodule ImageProxy do
+  alias ImageProxy.ConnValidation
+  alias ImageProxy.ConnValidations
+  alias ImageProxy.Operation
+  alias ImageProxy.Operations
+  alias ImageProxy.Source
+  alias ImageProxy.Sources
+
   @sources [
-    ImageProxy.Sources.URL
+    Sources.URL
   ]
 
   @operations [
-    {"crop", ImageProxy.Operations.Crop},
-    {"flip", ImageProxy.Operations.Flip},
-    {"watermarkimage", ImageProxy.Operations.WatermarkImage},
-    {"extract", ImageProxy.Operations.ExtractArea},
-    {"resize", ImageProxy.Operations.Resize},
-    {"smartcrop", ImageProxy.Operations.Smartcrop},
-    {"pipeline", ImageProxy.Operations.Pipeline}
+    {"crop", Operations.Crop},
+    {"flip", Operations.Flip},
+    {"watermarkimage", Operations.WatermarkImage},
+    {"extract", Operations.ExtractArea},
+    {"resize", Operations.Resize},
+    {"smartcrop", Operations.Smartcrop},
+    {"pipeline", Operations.Pipeline}
   ]
+
+  @conn_validations [
+    ConnValidations.SignatureKey,
+    ConnValidations.AllowedOrigins
+  ]
+
+  def validate_conn(conn, config) do
+    Enum.reduce_while(@conn_validations, conn, fn module, conn ->
+      validation = struct!(module, config: config)
+
+      with true <- ConnValidation.enabled?(validation, conn),
+           conn when not conn.halted <- ConnValidation.validate(validation, conn) do
+        {:cont, conn}
+      else
+        conn when conn.halted -> {:halt, conn}
+        _ -> {:cont, conn}
+      end
+    end)
+  end
 
   def params_operations(image, params) do
     params
@@ -30,8 +56,8 @@ defmodule ImageProxy do
 
   def operations(image, operation_name, params) do
     with {:ok, operation} <- operation_struct(operation_name, image, params),
-         true <- ImageProxy.Operation.valid?(operation) do
-      ImageProxy.Operation.process(operation)
+         true <- Operation.valid?(operation) do
+      Operation.process(operation)
     end
   end
 
@@ -41,6 +67,20 @@ defmodule ImageProxy do
 
   def cast_operation_name(_), do: {:error, :invalid_operation}
 
+  def get_image(params) do
+    source = Enum.find_value(@sources, &Source.cast(struct(&1), params))
+
+    if source do
+      Source.get_image(source)
+    else
+      {:error, :unknown_source}
+    end
+  end
+
+  def write_to_stream(image, file_extension) do
+    Vix.Vips.Image.write_to_stream(image, ".#{file_extension}")
+  end
+
   for {name, module_name} <- @operations do
     defp operation_struct(unquote(name), image, params) do
       unquote(module_name).new(image, params)
@@ -48,13 +88,4 @@ defmodule ImageProxy do
   end
 
   defp operation_struct(_, _image, _params), do: {:error, :invalid_operation}
-
-  def get_image(params) do
-    source = Enum.find_value(@sources, &ImageProxy.Source.cast(struct(&1), params))
-    ImageProxy.Source.get_image(source)
-  end
-
-  def write_to_stream(image, file_extension) do
-    Vix.Vips.Image.write_to_stream(image, ".#{file_extension}")
-  end
 end

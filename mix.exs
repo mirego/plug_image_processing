@@ -15,7 +15,16 @@ defmodule PlugImageProcessing.Mixfile do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       xref: [exclude: IEx],
-      deps: deps()
+      deps: deps(),
+      description: "Plug to process images on-the-fly using libvips",
+      source_url: "https://github.com/mirego/plug_image_processing",
+      homepage_url: "https://github.com/mirego/plug_image_processing",
+      docs: [
+        extras: ["README.md"],
+        main: "readme",
+        source_ref: "v#{@version}",
+        source_url: "https://github.com/mirego/plug_image_processing"
+      ],
     ]
   end
 

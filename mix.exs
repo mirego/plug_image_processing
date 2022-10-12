@@ -24,7 +24,7 @@ defmodule PlugImageProcessing.Mixfile do
         main: "readme",
         source_ref: "v#{@version}",
         source_url: "https://github.com/mirego/plug_image_processing"
-      ],
+      ]
     ]
   end
 

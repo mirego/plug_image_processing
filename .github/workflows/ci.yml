@@ -35,6 +35,9 @@ jobs:
           path: _build
           key: ${{ runner.os }}-build-${{ matrix.otp-version }}-${{ matrix.elixir-version }}-${{ hashFiles(format('{0}/mix.lock', github.workspace)) }}
 
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y libvips-dev
+      - run: vips --vips-version
       - run: make prepare
       - run: make lint
       - run: make check-github

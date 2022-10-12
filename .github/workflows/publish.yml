@@ -16,6 +16,9 @@ jobs:
         with:
           otp-version: 25.x
           elixir-version: 1.14.x
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y libvips-dev
+      - run: vips --vips-version
       - run: make prepare
       - run: mix compile --docs
       - run: mix hex.publish --yes

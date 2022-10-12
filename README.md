@@ -1,8 +1,9 @@
 <div align="center">
-  <strong>PlugImageProcessing</strong>
+  <img src="https://user-images.githubusercontent.com/11348/195426081-7a62709e-3309-4f6a-9740-4ef57d8df5d4.png" width="800" />
   <br /><br />
-  Image server as a plug, powered by libvips.
+  Image server as a <a href="https://hex.pm/packages/plug"><code>Plug</code></a>, powered by <a href="https://www.libvips.org/"><code>libvips</code></a>.
   <br /><br />
+  <a href="https://github.com/mirego/plug_image_processing/actions/workflows/ci.yml"><img src="https://github.com/mirego/plug_image_processing/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="https://hex.pm/packages/plug_image_processing"><img src="https://img.shields.io/hexpm/v/plug_image_processing.svg" /></a>
 </div>
 

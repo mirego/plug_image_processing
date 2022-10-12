@@ -1,7 +1,7 @@
-defmodule ImageProxy.Operations.WatermarkImage do
+defmodule PlugImageProcessing.Operations.WatermarkImage do
   defstruct image: nil, sub: nil, left: nil, top: nil, right: nil, bottom: nil
 
-  import ImageProxy.Options
+  import PlugImageProcessing.Options
 
   def new(image, params) do
     with {:ok, sub} <- cast_remote_image(params["image"]),
@@ -21,7 +21,7 @@ defmodule ImageProxy.Operations.WatermarkImage do
     end
   end
 
-  defimpl ImageProxy.Operation do
+  defimpl PlugImageProcessing.Operation do
     alias Vix.Vips.Image
 
     def valid?(operation) do
@@ -32,7 +32,7 @@ defmodule ImageProxy.Operations.WatermarkImage do
       end
     end
 
-    def process(operation) do
+    def process(operation, _config) do
       x = if operation.left, do: operation.left
       x = if operation.right, do: Image.width(operation.image) - Image.width(operation.sub) - operation.right, else: x
       x = x || 0

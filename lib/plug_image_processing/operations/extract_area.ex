@@ -1,5 +1,5 @@
-defmodule ImageProxy.Operations.ExtractArea do
-  import ImageProxy.Options
+defmodule PlugImageProcessing.Operations.ExtractArea do
+  import PlugImageProcessing.Options
 
   def new(image, params) do
     with {:ok, width} <- cast_integer(params["width"]),
@@ -7,7 +7,7 @@ defmodule ImageProxy.Operations.ExtractArea do
          {:ok, top} <- cast_integer(params["top"], 0),
          {:ok, height} <- cast_integer(params["height"]) do
       {:ok,
-       struct!(ImageProxy.Operations.Crop, %{
+       struct!(PlugImageProcessing.Operations.Crop, %{
          image: image,
          top: top,
          left: left,

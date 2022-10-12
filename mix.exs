@@ -1,11 +1,11 @@
-defmodule ImageProxy.Mixfile do
+defmodule PlugImageProcessing.Mixfile do
   use Mix.Project
 
   @version "0.0.1"
 
   def project do
     [
-      app: :image_proxy,
+      app: :plug_image_processing,
       version: @version,
       elixir: "~> 1.13",
       package: package(),
@@ -30,10 +30,15 @@ defmodule ImageProxy.Mixfile do
     [
       {:plug, "~> 1.0"},
       {:vix, "~> 0.13"},
-      {:tesla, "~> 1.0"},
+      {:finch, "~> 0.13"},
       {:telemetry, "~> 1.0"},
       {:jason, "~> 1.0"},
-      {:telemetry_metrics, "~> 0.6"}
+      {:telemetry_metrics, "~> 0.6"},
+
+      # Linting
+      {:credo, "~> 1.1", only: [:dev, :test]},
+      {:credo_envvar, "~> 0.1", only: [:dev, :test], runtime: false},
+      {:credo_naming, "~> 2.0", only: [:dev, :test], runtime: false}
     ]
   end
 

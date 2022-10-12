@@ -1,7 +1,7 @@
-defmodule ImageProxy.Operations.Crop do
+defmodule PlugImageProcessing.Operations.Crop do
   defstruct image: nil, left: 0, top: 0, width: nil, height: nil, gravity: nil
 
-  import ImageProxy.Options
+  import PlugImageProcessing.Options
 
   def new(image, params) do
     with {:ok, width} <- cast_integer(params["width"]),
@@ -20,7 +20,7 @@ defmodule ImageProxy.Operations.Crop do
     end
   end
 
-  defimpl ImageProxy.Operation do
+  defimpl PlugImageProcessing.Operation do
     def valid?(operation) do
       if operation.width && operation.height && operation.top && operation.left do
         true
@@ -29,11 +29,11 @@ defmodule ImageProxy.Operations.Crop do
       end
     end
 
-    def process(operation = %{gravity: "smart"}) do
+    def process(%{gravity: "smart"} = operation, _config) do
       Vix.Vips.Operation.smartcrop(operation.image, operation.width, operation.height)
     end
 
-    def process(operation) do
+    def process(operation, _config) do
       Vix.Vips.Operation.extract_area(
         operation.image,
         operation.left,

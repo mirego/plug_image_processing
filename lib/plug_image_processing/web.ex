@@ -1,19 +1,19 @@
-defmodule ImageProxy.Web do
-  use Plug.Builder, copy_opts_to_assign: :image_proxy_opts
+defmodule PlugImageProcessing.Web do
+  use Plug.Builder, copy_opts_to_assign: :plug_image_processing_opts
 
   import Plug.Conn
 
   plug(:cast_config)
   plug(:assign_operation_name)
-  plug(:validate)
+  plug(:run_middlewares)
   plug(:action)
 
   def assign_operation_name(conn, _) do
-    config_path = conn.assigns.image_proxy_config.path
+    config_path = conn.assigns.plug_image_processing_config.path
 
     if String.starts_with?(conn.request_path, config_path) do
       operation_name = operation_name_from_path(conn.request_path, config_path)
-      assign(conn, :image_proxy_operation_name, operation_name)
+      assign(conn, :plug_image_processing_operation_name, operation_name)
     else
       conn
     end
@@ -27,9 +27,9 @@ defmodule ImageProxy.Web do
     |> List.first()
   end
 
-  def action(%{assigns: %{image_proxy_operation_name: operation_name}} = conn, _opts) do
+  def action(%{assigns: %{plug_image_processing_operation_name: operation_name}} = conn, _opts) do
     :telemetry.span(
-      [:image_proxy, :endpoint],
+      [:plug_image_processing, :endpoint],
       %{conn: conn},
       fn -> {halt(process_image(conn, operation_name)), %{}} end
     )
@@ -37,31 +37,32 @@ defmodule ImageProxy.Web do
 
   def action(conn, _), do: conn
 
-  def validate(%{assigns: %{image_proxy_operation_name: _}} = conn, _) do
-    ImageProxy.validate_conn(conn, conn.assigns.image_proxy_config)
+  def run_middlewares(%{assigns: %{plug_image_processing_operation_name: _}} = conn, _) do
+    PlugImageProcessing.run_middlewares(conn, conn.assigns.plug_image_processing_config)
   end
 
-  def validate(conn, _), do: conn
+  def run_middlewares(conn, _), do: conn
 
   def cast_config(conn, _) do
     config =
-      case conn.assigns.image_proxy_opts do
+      case conn.assigns.plug_image_processing_opts do
+        {m, f} -> apply(m, f, [])
         {m, f, a} -> apply(m, f, a)
         config when is_list(config) -> config
         config when is_function(config, 0) -> config.()
         config -> raise ArgumentError, "Invalid config, expected either a keyword list, a function reference or a {module, function, args} structure. Got: #{inspect(config)}"
       end
 
-    assign(conn, :image_proxy_config, struct!(ImageProxy.Config, config))
+    assign(conn, :plug_image_processing_config, struct!(PlugImageProcessing.Config, config))
   end
 
   defp process_image(conn, operation_name) do
-    with {:ok, operation_name} <- ImageProxy.cast_operation_name(operation_name),
-         {:ok, image, suffix} <- ImageProxy.get_image(conn.params),
-         {:ok, image} <- ImageProxy.operations(image, operation_name, conn.params),
-         {:ok, image} <- ImageProxy.params_operations(image, conn.params) do
+    with {:ok, operation_name} <- PlugImageProcessing.cast_operation_name(operation_name, conn.assigns.plug_image_processing_config),
+         {:ok, image, suffix} <- PlugImageProcessing.get_image(conn.params, conn.assigns.plug_image_processing_config),
+         {:ok, image} <- PlugImageProcessing.operations(image, operation_name, conn.params, conn.assigns.plug_image_processing_config),
+         {:ok, image} <- PlugImageProcessing.params_operations(image, conn.params, conn.assigns.plug_image_processing_config) do
       image
-      |> ImageProxy.write_to_stream(suffix)
+      |> PlugImageProcessing.write_to_stream(suffix)
       |> send_chunk(conn)
     else
       {:error, error} ->

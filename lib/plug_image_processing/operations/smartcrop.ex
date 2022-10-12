@@ -1,11 +1,11 @@
-defmodule ImageProxy.Operations.Smartcrop do
-  import ImageProxy.Options
+defmodule PlugImageProcessing.Operations.Smartcrop do
+  import PlugImageProcessing.Options
 
   def new(image, params) do
     with {:ok, width} <- cast_integer(params["width"]),
          {:ok, height} <- cast_integer(params["height"]) do
       {:ok,
-       struct!(ImageProxy.Operations.Crop, %{
+       struct!(PlugImageProcessing.Operations.Crop, %{
          image: image,
          gravity: "smart",
          width: width,

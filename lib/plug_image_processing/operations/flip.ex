@@ -1,7 +1,7 @@
-defmodule ImageProxy.Operations.Flip do
+defmodule PlugImageProcessing.Operations.Flip do
   defstruct image: nil, direction: nil
 
-  import ImageProxy.Options
+  import PlugImageProcessing.Options
 
   def new(image, params) do
     with {:ok, direction} <- cast_direction(params["flip"], :VIPS_DIRECTION_HORIZONTAL),
@@ -15,12 +15,12 @@ defmodule ImageProxy.Operations.Flip do
     end
   end
 
-  defimpl ImageProxy.Operation do
+  defimpl PlugImageProcessing.Operation do
     def valid?(_operation) do
       true
     end
 
-    def process(operation) do
+    def process(operation, _config) do
       direction = if is_boolean(operation.direction), do: :VIPS_DIRECTION_HORIZONTAL, else: operation.direction
 
       Vix.Vips.Operation.flip(operation.image, direction)

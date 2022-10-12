@@ -1,22 +1,22 @@
 <div align="center">
-  <strong>ImageProxy</strong>
+  <strong>PlugImageProcessing</strong>
   <br /><br />
   Image server as a plug, powered by libvips.
   <br /><br />
-  <a href="https://hex.pm/packages/image_proxy"><img src="https://img.shields.io/hexpm/v/image_proxy.svg" /></a>
+  <a href="https://hex.pm/packages/plug_image_processing"><img src="https://img.shields.io/hexpm/v/plug_image_processing.svg" /></a>
 </div>
 
 ## Usage
 
 ### Installation
 
-ImageProxy is published on Hex. Add it to your list of dependencies in `mix.exs`:
+PlugImageProcessing is published on Hex. Add it to your list of dependencies in `mix.exs`:
 
 ```elixir
 # mix.exs
 def deps do
   [
-    {:image_proxy, ">= 0.0.1"}
+    {:plug_image_processing, ">= 0.0.1"}
   ]
 end
 ```
@@ -27,7 +27,7 @@ To expose a `/imageproxy` route, add the plug in your endpoint, before your rout
 
 ```elixir
 # lib/my_app_web/endpoint.ex
-plug(ImageProxy.Web, path: "/imageproxy")
+plug(PlugImageProcessing.Web, path: "/imageproxy")
 #...
 plug(MyAppWeb.Router)
 ```
@@ -46,7 +46,7 @@ It will download the image from the remote location, modify it using libvips and
 
 ### Operations
 
-A number of operations exposed by libvips are supported by `ImageProxy`. See the `ImageProxy.Operations.*` module for more details.
+A number of operations exposed by libvips are supported by `PlugImageProcessing`. See the `PlugImageProcessing.Operations.*` module for more details.
 
 ### Requests validations
 
@@ -58,7 +58,7 @@ By adding a signature key in your config, a parameter `sign` needs to be include
 The signature prevent a client to forge a large number of unique requests that would go through the CDN and hitting our server.
 
 ```elixir
-plug(ImageProxy.Web, signature_key: "1234")
+plug(PlugImageProcessing.Web, url_signature_key: "1234")
 ```
 
 Then a request path like:
@@ -84,7 +84,7 @@ Now this request will succeed!
 
 ## License
 
-`ImageProxy` is © 2022 [Mirego](https://www.mirego.com) and may be freely distributed under the [New BSD license](http://opensource.org/licenses/BSD-3-Clause). See the [`LICENSE.md`](https://github.com/simonprev/image_proxy/blob/master/LICENSE.md) file.
+`PlugImageProcessing` is © 2022 [Mirego](https://www.mirego.com) and may be freely distributed under the [New BSD license](http://opensource.org/licenses/BSD-3-Clause). See the [`LICENSE.md`](https://github.com/simonprev/plug_image_processing/blob/master/LICENSE.md) file.
 
 ## About Mirego
 

@@ -1,4 +1,4 @@
-defmodule ImageProxy.Options do
+defmodule PlugImageProcessing.Options do
   def build(options) do
     options
     |> Enum.map(fn
@@ -29,8 +29,8 @@ defmodule ImageProxy.Options do
   def cast_remote_image(nil, default), do: {:ok, default, nil}
 
   def cast_remote_image(url, _) do
-    with %ImageProxy.Sources.URL{} = source <- ImageProxy.Source.cast(%ImageProxy.Sources.URL{}, %{"url" => url}),
-         {:ok, image, _} <- ImageProxy.Source.get_image(source) do
+    with %PlugImageProcessing.Sources.URL{} = source <- PlugImageProcessing.Source.cast(%PlugImageProcessing.Sources.URL{}, %{"url" => url}),
+         {:ok, image, _} <- PlugImageProcessing.Source.get_image(source) do
       {:ok, image}
     end
   end

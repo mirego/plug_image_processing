@@ -1,4 +1,4 @@
-defprotocol ImageProxy.Source do
+defprotocol PlugImageProcessing.Source do
   def get_image(source)
   def cast(source, params)
 end

@@ -1,7 +1,7 @@
-defmodule ImageProxy.Operations.Resize do
+defmodule PlugImageProcessing.Operations.Resize do
   defstruct image: nil, width: nil, height: nil
 
-  import ImageProxy.Options
+  import PlugImageProcessing.Options
 
   def new(image, params) do
     with {:ok, width} <- cast_integer(params["w"] || params["width"]),
@@ -15,7 +15,7 @@ defmodule ImageProxy.Operations.Resize do
     end
   end
 
-  defimpl ImageProxy.Operation do
+  defimpl PlugImageProcessing.Operation do
     def valid?(operation) do
       if operation.width do
         true
@@ -24,11 +24,11 @@ defmodule ImageProxy.Operations.Resize do
       end
     end
 
-    def process(operation) do
+    def process(operation, _config) do
       hscale = operation.width / Vix.Vips.Image.width(operation.image)
       vscale = if operation.height, do: operation.height / Vix.Vips.Image.height(operation.image)
 
-      options = ImageProxy.Options.build(vscale: vscale)
+      options = PlugImageProcessing.Options.build(vscale: vscale)
 
       Vix.Vips.Operation.resize(operation.image, hscale, options)
     end

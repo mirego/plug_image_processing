@@ -1,30 +1,41 @@
-defmodule ImageProxy.Sources.URL do
+defmodule PlugImageProcessing.Sources.URL do
   defstruct uri: nil, suffix: nil
 
   def fetch_body(uri) do
-    Tesla.get!(URI.to_string(uri)).body
+    url = URI.to_string(uri)
+    Logger.metadata(plug_image_processing_source_url: url)
+
+    :get
+    |> Finch.build(url)
+    |> Finch.request(__MODULE__)
+    |> case do
+      {:ok, response} when response.status === 200 and is_binary(response.body) -> {:ok, response.body}
+      _ -> :error
+    end
   end
 
-  defimpl ImageProxy.Source do
-    @valid_types ~w(jpg png webp gif)
+  defimpl PlugImageProcessing.Source do
+    @valid_types ~w(jpg jpeg png webp gif)
 
-    alias ImageProxy.Options
+    alias PlugImageProcessing.Options
 
     def get_image(source) do
       metadata = %{uri: source.uri}
 
       body =
         :telemetry.span(
-          [:image_proxy, :source, :url, :request],
+          [:plug_image_processing, :source, :url, :request],
           metadata,
           fn ->
-            body = ImageProxy.Sources.URL.fetch_body(source.uri)
+            body = PlugImageProcessing.Sources.URL.fetch_body(source.uri)
             {body, %{}}
           end
         )
 
-      case Vix.Vips.Image.new_from_buffer(body) do
-        {:ok, image} -> {:ok, image, source.suffix}
+      with {:ok, body} <- body,
+           {:ok, image} <- Vix.Vips.Image.new_from_buffer(body) do
+        {:ok, image, source.suffix}
+      else
         _ -> {:error, :invalid_file}
       end
     end

@@ -38,7 +38,10 @@ defmodule PlugImageProcessing.Mixfile do
       # Linting
       {:credo, "~> 1.1", only: [:dev, :test]},
       {:credo_envvar, "~> 0.1", only: [:dev, :test], runtime: false},
-      {:credo_naming, "~> 2.0", only: [:dev, :test], runtime: false}
+      {:credo_naming, "~> 2.0", only: [:dev, :test], runtime: false},
+
+      # Docs
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 
@@ -50,6 +53,7 @@ defmodule PlugImageProcessing.Mixfile do
     [
       maintainers: ["Simon Prévost"],
       licenses: ["BSD-3-Clause"],
+      links: %{github: "https://github.com/mirego/plug_image_processing"},
       files: ~w(lib mix.exs README.md)
     ]
   end

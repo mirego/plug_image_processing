@@ -62,7 +62,7 @@ defmodule PlugImageProcessing.Mixfile do
     [
       maintainers: ["Simon Prévost"],
       licenses: ["BSD-3-Clause"],
-      links: %{github: "https://github.com/mirego/plug_image_processing"},
+      links: %{"GitHub" => "https://github.com/mirego/plug_image_processing"},
       files: ~w(lib mix.exs README.md)
     ]
   end

@@ -9,15 +9,26 @@ defmodule PlugImageProcessing.Sources.URL do
     |> Finch.build(url)
     |> Finch.request(__MODULE__)
     |> case do
-      {:ok, response} when response.status === 200 and is_binary(response.body) -> {:ok, response.body}
-      _ -> :error
+      {:ok, response} when response.status === 200 and is_binary(response.body) ->
+        {:ok, response.body}
+
+      {:ok, error} ->
+        {:error, error}
+
+      {:error, error} ->
+        {:error, error}
+
+      error ->
+        {:error, error}
     end
   end
 
   defimpl PlugImageProcessing.Source do
-    @valid_types ~w(jpg jpeg png webp gif)
+    require Logger
 
     alias PlugImageProcessing.Options
+
+    @valid_types ~w(jpg jpeg png webp gif)
 
     def get_image(source) do
       metadata = %{uri: source.uri}
@@ -36,7 +47,9 @@ defmodule PlugImageProcessing.Sources.URL do
            {:ok, image} <- Vix.Vips.Image.new_from_buffer(body) do
         {:ok, image, source.suffix}
       else
-        _ -> {:error, :invalid_file}
+        error ->
+          Logger.error("[PlugImageProcessing] - Unable to fetch source URL. #{inspect(error)}")
+          {:error, :invalid_file}
       end
     end
 
@@ -61,6 +74,7 @@ defmodule PlugImageProcessing.Sources.URL do
 
     def cast(source, params) do
       with url when not is_nil(url) <- params["url"],
+           url = URI.decode_www_form(url),
            uri when not is_nil(uri.host) <- URI.parse(url) do
         suffix = get_file_suffix(params, uri)
         struct!(source, uri: uri, suffix: suffix)

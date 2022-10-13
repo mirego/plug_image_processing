@@ -13,16 +13,18 @@ defmodule PlugImageProcessing.Middlewares.AllowedOrigins do
     def run(middleware, conn) do
       origins = middleware.config.allowed_origins
 
-      uri = URI.parse(conn.params["url"])
-
-      if uri.host in origins do
+      with url when not is_nil(url) <- conn.params["url"],
+           url = URI.decode_www_form(url),
+           uri when not is_nil(uri.host) <- URI.parse(url),
+           true <- uri.host in origins do
         conn
       else
-        Logger.error("[PlugImageProcessing] - Unallowed origins. Got: #{inspect(uri.host)}, expected one of: #{inspect(origins)}")
+        _ ->
+          Logger.error("[PlugImageProcessing] - Unallowed origins. Got: #{conn.params["url"]}, expected one of: #{inspect(origins)}")
 
-        conn
-        |> send_resp(403, "unallowed origin")
-        |> halt()
+          conn
+          |> send_resp(403, "unallowed origin")
+          |> halt()
       end
     end
   end

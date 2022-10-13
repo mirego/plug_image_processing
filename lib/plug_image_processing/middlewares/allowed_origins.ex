@@ -23,7 +23,7 @@ defmodule PlugImageProcessing.Middlewares.AllowedOrigins do
           Logger.error("[PlugImageProcessing] - Unallowed origins. Got: #{conn.params["url"]}, expected one of: #{inspect(origins)}")
 
           conn
-          |> send_resp(403, "unallowed origin")
+          |> send_resp(:forbidden, "Forbidden: Unallowed origin")
           |> halt()
       end
     end

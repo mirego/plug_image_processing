@@ -37,7 +37,7 @@ defmodule PlugImageProcessing.Middlewares.SignatureKey do
         Logger.error("[PlugImageProcessing] - Invalid signature. Got: #{inspect(conn.params["sign"])}, expected: #{valid_sign}")
 
         conn
-        |> send_resp(403, "invalid signature")
+        |> send_resp(:unauthorized, "Unauthorized: Invalid signature")
         |> halt()
       end
     end

@@ -66,12 +66,14 @@ defmodule PlugImageProcessing.Web do
       |> send_chunk(conn)
     else
       {:error, error} ->
-        send_resp(conn, 400, "Bad request: #{inspect(error)}")
+        conn
+        |> delete_resp_header("cache-control")
+        |> send_resp(:bad_request, "Bad request: #{inspect(error)}")
     end
   end
 
   defp send_chunk(stream, conn) do
-    conn = send_chunked(conn, 200)
+    conn = send_chunked(conn, :ok)
 
     Enum.reduce_while(stream, conn, fn chunk, conn ->
       case chunk(conn, chunk) do

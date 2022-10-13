@@ -85,7 +85,7 @@ Now this request will succeed!
 
 ## License
 
-`PlugImageProcessing` is © 2022 [Mirego](https://www.mirego.com) and may be freely distributed under the [New BSD license](http://opensource.org/licenses/BSD-3-Clause). See the [`LICENSE.md`](https://github.com/simonprev/plug_image_processing/blob/master/LICENSE.md) file.
+`PlugImageProcessing` is © 2022 [Mirego](https://www.mirego.com) and may be freely distributed under the [New BSD license](http://opensource.org/licenses/BSD-3-Clause). See the [`LICENSE.md`](https://github.com/mirego/plug_image_processing/blob/master/LICENSE.md) file.
 
 ## About Mirego
 

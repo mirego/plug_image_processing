@@ -11,9 +11,15 @@ defmodule PlugImageProcessing.Sources.URL do
 
     with {:ok, 200, headers, client_reference} <- :hackney.get(url),
          {:ok, body} when is_binary(body) <- :hackney.body(client_reference) do
-      file_suffix = get_file_suffix(source, headers)
+      content_type =
+        case List.keyfind(headers, "Content-Type", 0) do
+          {_, value} -> value
+          _ -> nil
+        end
 
-      {:ok, body, file_suffix}
+      file_suffix = get_file_suffix(source, content_type)
+
+      {:ok, body, content_type, file_suffix}
     else
       {:ok, status, _, _} ->
         {:error, status}
@@ -26,12 +32,15 @@ defmodule PlugImageProcessing.Sources.URL do
     end
   end
 
-  defp get_file_suffix(source, headers) do
+  defp get_file_suffix(source, content_type) do
     # Find the type in the source response content-type header
+    type = String.trim_leading(content_type, "image/")
+
     type =
-      case List.keyfind(headers, "Content-Type", 0) do
-        {_, "image/" <> type} when type in @valid_types -> "." <> type
-        _ -> nil
+      if type in @valid_types do
+        "." <> type
+      else
+        nil
       end
 
     # Find the type in the client provided "type" query param
@@ -80,9 +89,9 @@ defmodule PlugImageProcessing.Sources.URL do
           end
         )
 
-      with {:ok, body, file_suffix} when is_binary(file_suffix) and is_binary(body) <- source_body,
+      with {:ok, body, content_type, file_suffix} when is_binary(file_suffix) and is_binary(body) <- source_body,
            {:ok, image} <- Vix.Vips.Image.new_from_buffer(body) do
-        {:ok, image, file_suffix}
+        {:ok, image, content_type, file_suffix}
       else
         error ->
           Logger.error("[PlugImageProcessing] - Unable to fetch source URL. #{inspect(error)}")

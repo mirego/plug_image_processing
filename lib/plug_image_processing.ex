@@ -82,7 +82,7 @@ defmodule PlugImageProcessing do
     end
   end
 
-  def write_to_stream(image, file_extension) do
-    Vix.Vips.Image.write_to_stream(image, ".#{file_extension}")
+  def write_to_buffer(image, file_extension) do
+    Vix.Vips.Image.write_to_buffer(image, ".#{file_extension}")
   end
 end

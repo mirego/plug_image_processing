@@ -58,31 +58,23 @@ defmodule PlugImageProcessing.Web do
 
   defp process_image(conn, operation_name) do
     with {:ok, operation_name} <- PlugImageProcessing.cast_operation_name(operation_name, conn.assigns.plug_image_processing_config),
-         {:ok, image, suffix} <- PlugImageProcessing.get_image(conn.params, conn.assigns.plug_image_processing_config),
+         {:ok, image, content_type, suffix} <- PlugImageProcessing.get_image(conn.params, conn.assigns.plug_image_processing_config),
          {:ok, image} <- PlugImageProcessing.operations(image, operation_name, conn.params, conn.assigns.plug_image_processing_config),
-         {:ok, image} <- PlugImageProcessing.params_operations(image, conn.params, conn.assigns.plug_image_processing_config) do
-      image
-      |> PlugImageProcessing.write_to_stream(suffix)
-      |> send_chunk(conn)
+         {:ok, image} <- PlugImageProcessing.params_operations(image, conn.params, conn.assigns.plug_image_processing_config),
+         {:ok, binary} <- PlugImageProcessing.write_to_buffer(image, suffix) do
+      conn =
+        if is_binary(content_type) do
+          put_resp_header(conn, "content-type", content_type)
+        else
+          conn
+        end
+
+      send_resp(conn, :ok, binary)
     else
       {:error, error} ->
         conn
         |> delete_resp_header("cache-control")
         |> send_resp(:bad_request, "Bad request: #{inspect(error)}")
     end
-  end
-
-  defp send_chunk(stream, conn) do
-    conn = send_chunked(conn, :ok)
-
-    Enum.reduce_while(stream, conn, fn chunk, conn ->
-      case chunk(conn, chunk) do
-        {:ok, conn} ->
-          {:cont, conn}
-
-        {:error, :closed} ->
-          {:halt, conn}
-      end
-    end)
   end
 end

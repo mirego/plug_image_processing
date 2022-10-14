@@ -30,7 +30,7 @@ defmodule PlugImageProcessing.Options do
 
   def cast_remote_image(url, _) do
     with %PlugImageProcessing.Sources.URL{} = source <- PlugImageProcessing.Source.cast(%PlugImageProcessing.Sources.URL{}, %{"url" => url}),
-         {:ok, image, _} <- PlugImageProcessing.Source.get_image(source) do
+         {:ok, image, _, _} <- PlugImageProcessing.Source.get_image(source) do
       {:ok, image}
     end
   end

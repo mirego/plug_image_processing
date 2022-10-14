@@ -50,7 +50,10 @@ defmodule PlugImageProcessing.Mixfile do
       {:credo_naming, "~> 2.0", only: [:dev, :test], runtime: false},
 
       # Docs
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+
+      # Types
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end
 

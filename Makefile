@@ -58,8 +58,12 @@ check-format:
 check-unused-dependencies:
 	mix deps.unlock --check-unused
 
+.PHONY: check-typing
+check-typing:
+	mix dialyzer
+
 .PHONY: check-github
-check-github: check-format check-unused-dependencies check-test ## Run various checks on project files and report as GitHub comment
+check-github: check-format check-unused-dependencies check-test check-typing ## Run various checks on project files and report as GitHub comment
 
 .PHONY: format
 format: ## Format project files

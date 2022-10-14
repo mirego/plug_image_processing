@@ -4,6 +4,10 @@ defmodule PlugImageProcessing do
   alias PlugImageProcessing.Operation
   alias PlugImageProcessing.Source
 
+  @type image :: Vix.Vips.Image.t()
+  @type config :: PlugImageProcessing.Config.t()
+
+  @spec generate_url(String.t(), map(), Operation.t(), map()) :: String.t()
   def generate_url(url, config, operation, query) do
     config = struct!(PlugImageProcessing.Config, config)
 
@@ -22,6 +26,7 @@ defmodule PlugImageProcessing do
     URI.to_string(uri)
   end
 
+  @spec run_middlewares(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def run_middlewares(conn, config) do
     Enum.reduce_while(config.middlewares, conn, fn module, conn ->
       middleware = struct!(module, config: config)
@@ -30,12 +35,13 @@ defmodule PlugImageProcessing do
            conn when not conn.halted <- Middleware.run(middleware, conn) do
         {:cont, conn}
       else
-        conn when conn.halted -> {:halt, conn}
+        conn when is_struct(conn, Plug.Conn) and conn.halted -> {:halt, conn}
         _ -> {:cont, conn}
       end
     end)
   end
 
+  @spec params_operations(image(), map(), config()) :: {:ok, image()} | {:error, atom()}
   def params_operations(image, params, config) do
     image =
       Enum.reduce_while(params, image, fn {key, value}, image ->
@@ -52,6 +58,7 @@ defmodule PlugImageProcessing do
     end
   end
 
+  @spec operations(image(), String.t(), map(), config()) :: {:ok, image()} | {:error, atom()}
   def operations(image, operation_name, params, config) do
     operation =
       Enum.find_value(config.operations, fn {name, module_name} ->
@@ -64,6 +71,7 @@ defmodule PlugImageProcessing do
     end
   end
 
+  @spec cast_operation_name(String.t(), config()) :: {:ok, String.t()} | {:error, atom()}
   def cast_operation_name(name, config) do
     if name in Enum.map(config.operations, &elem(&1, 0)) do
       {:ok, name}
@@ -72,6 +80,7 @@ defmodule PlugImageProcessing do
     end
   end
 
+  @spec get_image(map(), config()) :: {:ok, image(), String.t() | nil, String.t()} | {:error, atom()}
   def get_image(params, config) do
     source = Enum.find_value(config.sources, &Source.cast(struct(&1), params))
 
@@ -82,6 +91,7 @@ defmodule PlugImageProcessing do
     end
   end
 
+  @spec write_to_buffer(image(), String.t()) :: {:ok, binary()} | {:error, term()}
   def write_to_buffer(image, file_extension) do
     Vix.Vips.Image.write_to_buffer(image, ".#{file_extension}")
   end

@@ -1,7 +1,7 @@
 defmodule PlugImageProcessing.Mixfile do
   use Mix.Project
 
-  @version "0.0.7"
+  @version "0.1.0"
 
   def project do
     [

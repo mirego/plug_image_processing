@@ -9,7 +9,7 @@ defmodule PlugImageProcessing.Sources.URL do
     url = URI.to_string(source.uri)
     Logger.metadata(plug_image_processing_source_url: url)
 
-    with {:ok, 200, headers, client_reference} <- :hackney.get(url),
+    with {:ok, 200, headers, client_reference} <- :hackney.get(url, [], <<>>, follow_redirect: true),
          {:ok, body} when is_binary(body) <- :hackney.body(client_reference) do
       content_type =
         case List.keyfind(headers, "Content-Type", 0) do
@@ -17,12 +17,12 @@ defmodule PlugImageProcessing.Sources.URL do
           _ -> nil
         end
 
-      file_suffix = get_file_suffix(source, content_type)
+      {content_type, file_suffix} = get_file_suffix(source, content_type)
 
       {:ok, body, content_type, file_suffix}
     else
       {:ok, status, _, _} ->
-        {:error, status}
+        {:http_error, status}
 
       {:error, error} ->
         {:error, error}
@@ -52,10 +52,18 @@ defmodule PlugImageProcessing.Sources.URL do
       end
 
     # Fallback to the extension name of the "url" query param
-    type = type || Path.extname(source.uri.path)
+    type = type || (source.uri.path && Path.extname(source.uri.path))
 
     case type do
-      "." <> _ ->
+      ".gif" ->
+        options =
+          [{"strip", Options.cast_boolean(source.params["stripmeta"])}]
+          |> Options.build()
+          |> Options.encode_suffix()
+
+        {"image/gif", type <> options}
+
+      "." <> type_name ->
         options =
           [
             {"Q", Options.cast_integer(source.params["quality"])},
@@ -64,7 +72,7 @@ defmodule PlugImageProcessing.Sources.URL do
           |> Options.build()
           |> Options.encode_suffix()
 
-        type <> options
+        {"image/#{type_name}", type <> options}
 
       _ ->
         :invalid_file_type
@@ -77,26 +85,30 @@ defmodule PlugImageProcessing.Sources.URL do
     alias PlugImageProcessing.Sources.URL
 
     def get_image(source) do
-      metadata = %{uri: source.uri}
-
-      source_body =
-        :telemetry.span(
-          [:plug_image_processing, :source, :url, :request],
-          metadata,
-          fn ->
-            result = URL.fetch_body(source)
-            {result, %{}}
-          end
-        )
-
-      with {:ok, body, content_type, file_suffix} when is_binary(file_suffix) and is_binary(body) <- source_body,
-           {:ok, image} <- Vix.Vips.Image.new_from_buffer(body) do
+      with {:ok, body, content_type, file_suffix} when is_binary(file_suffix) and is_binary(body) <- fetch_remote_image(source),
+           {:ok, image} <- Vix.Vips.Image.new_from_buffer(body, buffer_options(content_type)) do
         {:ok, image, content_type, file_suffix}
       else
         error ->
           Logger.error("[PlugImageProcessing] - Unable to fetch source URL. #{inspect(error)}")
           {:error, :invalid_file}
       end
+    end
+
+    defp buffer_options("image/gif"), do: [n: -1]
+    defp buffer_options(_), do: []
+
+    defp fetch_remote_image(source) do
+      metadata = %{uri: source.uri}
+
+      :telemetry.span(
+        [:plug_image_processing, :source, :url, :request],
+        metadata,
+        fn ->
+          result = URL.fetch_body(source)
+          {result, %{}}
+        end
+      )
     end
 
     def cast(source, params) do

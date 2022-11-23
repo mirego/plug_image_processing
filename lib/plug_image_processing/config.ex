@@ -8,6 +8,7 @@ defmodule PlugImageProcessing.Config do
   ]
 
   @operations [
+    {"", Operations.Echo},
     {"crop", Operations.Crop},
     {"flip", Operations.Flip},
     {"watermarkimage", Operations.WatermarkImage},

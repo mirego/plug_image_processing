@@ -93,6 +93,6 @@ defmodule PlugImageProcessing do
 
   @spec write_to_buffer(image(), String.t()) :: {:ok, binary()} | {:error, term()}
   def write_to_buffer(image, file_extension) do
-    Vix.Vips.Image.write_to_buffer(image, ".#{file_extension}")
+    Vix.Vips.Image.write_to_buffer(image, file_extension)
   end
 end

@@ -24,13 +24,9 @@ defmodule PlugImageProcessing.Options do
   def cast_boolean("false", _default), do: {:ok, false}
   def cast_boolean(_, default), do: {:ok, default}
 
-  def cast_remote_image(value, default \\ nil)
-
-  def cast_remote_image(nil, default), do: {:ok, default, nil}
-
-  def cast_remote_image(url, _) do
+  def cast_remote_image(url, config) do
     with %PlugImageProcessing.Sources.URL{} = source <- PlugImageProcessing.Source.cast(%PlugImageProcessing.Sources.URL{}, %{"url" => url}),
-         {:ok, image, _, _} <- PlugImageProcessing.Source.get_image(source) do
+         {:ok, image, _, _} <- PlugImageProcessing.Source.get_image(source, config) do
       {:ok, image}
     end
   end

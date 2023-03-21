@@ -62,7 +62,7 @@ defmodule PlugImageProcessing do
   def operations(image, operation_name, params, config) do
     operation =
       Enum.find_value(config.operations, fn {name, module_name} ->
-        operation_name === name && module_name.new(image, params)
+        operation_name === name && module_name.new(image, params, config)
       end) || {:error, :invalid_operation}
 
     with {:ok, operation} <- operation,
@@ -85,7 +85,7 @@ defmodule PlugImageProcessing do
     source = Enum.find_value(config.sources, &Source.cast(struct(&1), params))
 
     if source do
-      Source.get_image(source)
+      Source.get_image(source, config)
     else
       {:error, :unknown_source}
     end

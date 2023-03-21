@@ -3,7 +3,7 @@ defmodule PlugImageProcessing.Operations.Flip do
 
   import PlugImageProcessing.Options
 
-  def new(image, params) do
+  def new(image, params, _config) do
     with {:ok, direction} <- cast_direction(params["flip"], :VIPS_DIRECTION_HORIZONTAL),
          {:ok, direction} <- cast_direction(params["direction"], direction),
          {:ok, direction} <- cast_boolean(params["flip"], direction) do

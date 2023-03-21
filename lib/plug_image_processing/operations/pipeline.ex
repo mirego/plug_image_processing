@@ -3,7 +3,7 @@ defmodule PlugImageProcessing.Operations.Pipeline do
 
   import PlugImageProcessing.Options
 
-  def new(image, params) do
+  def new(image, params, _config) do
     with {:ok, operations} <- cast_json(params["operations"]) do
       {:ok,
        struct!(__MODULE__, %{

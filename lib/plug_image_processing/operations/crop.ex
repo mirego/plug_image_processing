@@ -3,7 +3,7 @@ defmodule PlugImageProcessing.Operations.Crop do
 
   import PlugImageProcessing.Options
 
-  def new(image, params) do
+  def new(image, params, _config) do
     with {:ok, width} <- cast_integer(params["width"]),
          {:ok, left} <- cast_integer(params["left"], 0),
          {:ok, top} <- cast_integer(params["top"], 0),

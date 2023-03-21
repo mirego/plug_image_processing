@@ -1,5 +1,5 @@
 defmodule PlugImageProcessing.Web do
-  use Plug.Builder, copy_opts_to_assign: :plug_image_processing_opts
+  use Plug.Builder
 
   import Plug.Conn
 
@@ -8,12 +8,18 @@ defmodule PlugImageProcessing.Web do
   plug(:run_middlewares)
   plug(:action)
 
+  def call(conn, opts) do
+    conn
+    |> put_private(:plug_image_processing_opts, opts)
+    |> super(opts)
+  end
+
   def assign_operation_name(conn, _) do
-    config_path = conn.assigns.plug_image_processing_config.path
+    config_path = conn.private.plug_image_processing_config.path
 
     if String.starts_with?(conn.request_path, config_path) do
       operation_name = operation_name_from_path(conn.request_path, config_path)
-      assign(conn, :plug_image_processing_operation_name, operation_name)
+      put_private(conn, :plug_image_processing_operation_name, operation_name)
     else
       conn
     end
@@ -27,25 +33,25 @@ defmodule PlugImageProcessing.Web do
     |> List.first()
   end
 
-  def action(%{assigns: %{plug_image_processing_operation_name: operation_name}} = conn, _opts) do
+  def action(%{private: %{plug_image_processing_operation_name: operation_name}} = conn, _opts) do
     :telemetry.span(
       [:plug_image_processing, :endpoint],
       %{conn: conn},
-      fn -> {halt(process_image(conn, operation_name)), %{}} end
+      fn -> {halt(process_image(conn, operation_name, retry: true)), %{}} end
     )
   end
 
   def action(conn, _), do: conn
 
-  def run_middlewares(%{assigns: %{plug_image_processing_operation_name: _}} = conn, _) do
-    PlugImageProcessing.run_middlewares(conn, conn.assigns.plug_image_processing_config)
+  def run_middlewares(%{private: %{plug_image_processing_operation_name: _}} = conn, _) do
+    PlugImageProcessing.run_middlewares(conn, conn.private.plug_image_processing_config)
   end
 
   def run_middlewares(conn, _), do: conn
 
   def cast_config(conn, _) do
     config =
-      case conn.assigns.plug_image_processing_opts do
+      case conn.private.plug_image_processing_opts do
         {m, f} -> apply(m, f, [])
         {m, f, a} -> apply(m, f, a)
         config when is_list(config) -> config
@@ -53,14 +59,14 @@ defmodule PlugImageProcessing.Web do
         config -> raise ArgumentError, "Invalid config, expected either a keyword list, a function reference or a {module, function, args} structure. Got: #{inspect(config)}"
       end
 
-    assign(conn, :plug_image_processing_config, struct!(PlugImageProcessing.Config, config))
+    put_private(conn, :plug_image_processing_config, struct!(PlugImageProcessing.Config, config))
   end
 
-  defp process_image(conn, operation_name) do
-    with {:ok, operation_name} <- PlugImageProcessing.cast_operation_name(operation_name, conn.assigns.plug_image_processing_config),
-         {:ok, image, content_type, suffix} <- PlugImageProcessing.get_image(conn.params, conn.assigns.plug_image_processing_config),
-         {:ok, image} <- PlugImageProcessing.operations(image, operation_name, conn.params, conn.assigns.plug_image_processing_config),
-         {:ok, image} <- PlugImageProcessing.params_operations(image, conn.params, conn.assigns.plug_image_processing_config),
+  defp process_image(conn, operation_name, opts) do
+    with {:ok, operation_name} <- PlugImageProcessing.cast_operation_name(operation_name, conn.private.plug_image_processing_config),
+         {:ok, image, content_type, suffix} <- PlugImageProcessing.get_image(conn.params, conn.private.plug_image_processing_config),
+         {:ok, image} <- PlugImageProcessing.operations(image, operation_name, conn.params, conn.private.plug_image_processing_config),
+         {:ok, image} <- PlugImageProcessing.params_operations(image, conn.params, conn.private.plug_image_processing_config),
          {:ok, binary} <- PlugImageProcessing.write_to_buffer(image, suffix) do
       conn =
         if is_binary(content_type) do
@@ -74,7 +80,30 @@ defmodule PlugImageProcessing.Web do
       {:error, error} ->
         conn
         |> delete_resp_header("cache-control")
-        |> send_resp(:bad_request, "Bad request: #{inspect(error)}")
+        |> handle_error(operation_name, error, opts)
+    end
+  end
+
+  defp handle_error(conn, operation_name, error, opts) do
+    with true <- Keyword.fetch!(opts, :retry),
+         on_error when is_function(on_error) <- Map.get(conn.private.plug_image_processing_config.onerror, conn.params["onerror"]) do
+      case on_error.(conn) do
+        {:retry, conn} ->
+          :telemetry.span(
+            [:plug_image_processing, :endpoint, :retry],
+            %{conn: conn},
+            fn -> {process_image(conn, operation_name, retry: false), %{}} end
+          )
+
+        {:halt, conn} ->
+          conn
+
+        conn ->
+          send_resp(conn, :bad_request, "Bad request: #{inspect(error)}")
+      end
+    else
+      _ ->
+        send_resp(conn, :bad_request, "Bad request: #{inspect(error)}")
     end
   end
 end

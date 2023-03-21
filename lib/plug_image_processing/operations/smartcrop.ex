@@ -1,7 +1,7 @@
 defmodule PlugImageProcessing.Operations.Smartcrop do
   import PlugImageProcessing.Options
 
-  def new(image, params) do
+  def new(image, params, _config) do
     with {:ok, width} <- cast_integer(params["width"]),
          {:ok, height} <- cast_integer(params["height"]) do
       {:ok,

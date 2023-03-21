@@ -24,12 +24,15 @@ defmodule PlugImageProcessing.Config do
     Middlewares.CacheHeaders
   ]
 
+  @enforce_keys ~w(path)a
   defstruct path: nil,
             sources: @sources,
             operations: @operations,
             middlewares: @middlewares,
+            onerror: %{},
             url_signature_key: nil,
             allowed_origins: nil,
+            http_client: PlugImageProcessing.Sources.HTTPClient.Hackney,
             http_cache_ttl: nil
 
   @type t :: %__MODULE__{
@@ -37,6 +40,8 @@ defmodule PlugImageProcessing.Config do
           middlewares: list(module()),
           operations: list({String.t(), module()}),
           sources: list(module()),
+          onerror: %{},
+          http_client: module(),
           url_signature_key: String.t() | nil,
           allowed_origins: list(String.t()) | nil,
           http_cache_ttl: non_neg_integer() | nil

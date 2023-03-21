@@ -1,10 +1,10 @@
 defmodule PlugImageProcessing.Operations.WatermarkImage do
-  defstruct image: nil, sub: nil, left: nil, top: nil, right: nil, bottom: nil
+  defstruct image: nil, sub: nil, left: nil, top: nil, right: nil, bottom: nil, http_client: nil
 
   import PlugImageProcessing.Options
 
-  def new(image, params) do
-    with {:ok, sub} <- cast_remote_image(params["image"]),
+  def new(image, params, config) do
+    with {:ok, sub} <- cast_remote_image(params["image"], config),
          {:ok, left} <- cast_integer(params["left"]),
          {:ok, right} <- cast_integer(params["right"]),
          {:ok, bottom} <- cast_integer(params["bottom"]),

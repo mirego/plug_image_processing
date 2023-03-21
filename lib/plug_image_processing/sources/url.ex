@@ -5,30 +5,20 @@ defmodule PlugImageProcessing.Sources.URL do
 
   @valid_types ~w(jpg jpeg png webp gif)
 
-  def fetch_body(source) do
+  def fetch_body(source, http_client) do
     url = URI.to_string(source.uri)
     Logger.metadata(plug_image_processing_source_url: url)
 
-    with {:ok, 200, headers, client_reference} <- :hackney.get(url, [], <<>>, follow_redirect: true),
-         {:ok, body} when is_binary(body) <- :hackney.body(client_reference) do
+    with {:ok, body, headers} <- http_client.get(url) do
       content_type =
         case List.keyfind(headers, "Content-Type", 0) do
           {_, value} -> value
-          _ -> nil
+          _ -> ""
         end
 
       {content_type, file_suffix} = get_file_suffix(source, content_type)
 
       {:ok, body, content_type, file_suffix}
-    else
-      {:ok, status, _, _} ->
-        {:http_error, status}
-
-      {:error, error} ->
-        {:error, error}
-
-      error ->
-        {:error, error}
     end
   end
 
@@ -84,8 +74,8 @@ defmodule PlugImageProcessing.Sources.URL do
 
     alias PlugImageProcessing.Sources.URL
 
-    def get_image(source) do
-      with {:ok, body, content_type, file_suffix} when is_binary(file_suffix) and is_binary(body) <- fetch_remote_image(source),
+    def get_image(source, config) do
+      with {:ok, body, content_type, file_suffix} when is_binary(file_suffix) and is_binary(body) <- fetch_remote_image(source, config.http_client),
            {:ok, image} <- Vix.Vips.Image.new_from_buffer(body, buffer_options(content_type)) do
         {:ok, image, content_type, file_suffix}
       else
@@ -98,14 +88,14 @@ defmodule PlugImageProcessing.Sources.URL do
     defp buffer_options("image/gif"), do: [n: -1]
     defp buffer_options(_), do: []
 
-    defp fetch_remote_image(source) do
+    defp fetch_remote_image(source, http_client) do
       metadata = %{uri: source.uri}
 
       :telemetry.span(
         [:plug_image_processing, :source, :url, :request],
         metadata,
         fn ->
-          result = URL.fetch_body(source)
+          result = URL.fetch_body(source, http_client)
           {result, %{}}
         end
       )

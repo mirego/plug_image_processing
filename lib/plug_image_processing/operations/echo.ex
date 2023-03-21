@@ -1,7 +1,7 @@
 defmodule PlugImageProcessing.Operations.Echo do
   defstruct image: nil
 
-  def new(image, _params) do
+  def new(image, _params, _config) do
     {:ok, struct!(__MODULE__, %{image: image})}
   end
 

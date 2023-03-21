@@ -3,7 +3,7 @@ defmodule PlugImageProcessing.Operations.Resize do
 
   import PlugImageProcessing.Options
 
-  def new(image, params) do
+  def new(image, params, _config) do
     with {:ok, width} <- cast_integer(params["w"] || params["width"]),
          {:ok, height} <- cast_integer(params["h"] || params["height"]) do
       {:ok,

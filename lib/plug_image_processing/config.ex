@@ -32,6 +32,7 @@ defmodule PlugImageProcessing.Config do
             onerror: %{},
             url_signature_key: nil,
             allowed_origins: nil,
+            http_client_cache: PlugImageProcessing.Sources.HTTPClientCache.Default,
             http_client: PlugImageProcessing.Sources.HTTPClient.Hackney,
             http_cache_ttl: nil
 

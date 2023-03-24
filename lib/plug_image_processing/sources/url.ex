@@ -1,15 +1,39 @@
 defmodule PlugImageProcessing.Sources.URL do
   defstruct uri: nil, params: nil
 
+  @type t :: %__MODULE__{}
+
   alias PlugImageProcessing.Options
 
   @valid_types ~w(jpg jpeg png webp gif)
 
-  def fetch_body(source, http_client) do
+  def fetch_body(source, http_client, http_client_cache) do
+    metadata = %{uri: source.uri}
     url = URI.to_string(source.uri)
-    Logger.metadata(plug_image_processing_source_url: url)
 
-    with {:ok, body, headers} <- http_client.get(url) do
+    response =
+      cond do
+        http_client_cache.invalid_source?(source) ->
+          :telemetry.execute(
+            [:plug_image_processing, :source, :url, :invalid_source],
+            metadata
+          )
+
+          {:error, :invalid_file}
+
+        response = http_client_cache.fetch_source(source) ->
+          :telemetry.execute(
+            [:plug_image_processing, :source, :url, :cached_source],
+            metadata
+          )
+
+          response
+
+        true ->
+          tap(http_client.get(url), &http_client_cache.put_source(source, &1))
+      end
+
+    with {:ok, body, headers} <- response do
       content_type =
         case List.keyfind(headers, "Content-Type", 0) do
           {_, value} -> value
@@ -75,7 +99,7 @@ defmodule PlugImageProcessing.Sources.URL do
     alias PlugImageProcessing.Sources.URL
 
     def get_image(source, config) do
-      with {:ok, body, content_type, file_suffix} when is_binary(file_suffix) and is_binary(body) <- fetch_remote_image(source, config.http_client),
+      with {:ok, body, content_type, file_suffix} when is_binary(file_suffix) and is_binary(body) <- fetch_remote_image(source, config),
            {:ok, image} <- Vix.Vips.Image.new_from_buffer(body, buffer_options(content_type)) do
         {:ok, image, content_type, file_suffix}
       else
@@ -88,14 +112,14 @@ defmodule PlugImageProcessing.Sources.URL do
     defp buffer_options("image/gif"), do: [n: -1]
     defp buffer_options(_), do: []
 
-    defp fetch_remote_image(source, http_client) do
+    defp fetch_remote_image(source, config) do
       metadata = %{uri: source.uri}
 
       :telemetry.span(
         [:plug_image_processing, :source, :url, :request],
         metadata,
         fn ->
-          result = URL.fetch_body(source, http_client)
+          result = URL.fetch_body(source, config.http_client, config.http_client_cache)
           {result, %{}}
         end
       )

@@ -54,6 +54,7 @@ defmodule PlugImageProcessing.WebTest do
       conn = Web.call(conn, plug_opts)
       {:ok, image} = conn_to_image(conn)
 
+      assert get_resp_header(conn, "cache-control") === ["private, no-cache, no-store, must-revalidate"]
       assert Image.width(image) === 10
     end
 
@@ -68,6 +69,7 @@ defmodule PlugImageProcessing.WebTest do
       conn = conn(:get, "/imageproxy/resize", %{width: 20, url: "http://example.org/404.jpg", onerror: "test"})
       conn = Web.call(conn, plug_opts)
 
+      assert get_resp_header(conn, "cache-control") === ["private, no-cache, no-store, must-revalidate"]
       assert conn.status === 500
       assert conn.resp_body === "Oops"
     end

@@ -79,7 +79,7 @@ defmodule PlugImageProcessing.Web do
     else
       {:error, error} ->
         conn
-        |> delete_resp_header("cache-control")
+        |> put_resp_header("cache-control", "private, no-cache, no-store, must-revalidate")
         |> handle_error(operation_name, error, opts)
     end
   end

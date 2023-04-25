@@ -7,7 +7,7 @@ defmodule PlugImageProcessing.Sources.URL do
 
   @valid_types ~w(jpg jpeg png webp gif)
 
-  def fetch_body(source, http_client, http_client_cache) do
+  def fetch_body(source, http_client_timeout, http_client_max_length, http_client, http_client_cache) do
     metadata = %{uri: source.uri}
     url = URI.to_string(source.uri)
 
@@ -19,7 +19,7 @@ defmodule PlugImageProcessing.Sources.URL do
             metadata
           )
 
-          {:error, :invalid_file}
+          {:cached_error, url}
 
         response = http_client_cache.fetch_source(source) ->
           :telemetry.execute(
@@ -30,7 +30,19 @@ defmodule PlugImageProcessing.Sources.URL do
           response
 
         true ->
-          tap(http_client.get(url), &http_client_cache.put_source(source, &1))
+          http_get_task = Task.async(fn -> http_client.get(url, http_client_max_length) end)
+
+          case Task.yield(http_get_task, http_client_timeout) || Task.shutdown(http_get_task) do
+            nil ->
+              {:http_timeout, "Timeout (#{http_client_timeout}ms) on #{url}"}
+
+            {:exit, reason} ->
+              {:http_exit, "Exit with #{reason} (#{http_client_timeout}ms) on #{url}"}
+
+            {:ok, result} ->
+              http_client_cache.put_source(source, result)
+              result
+          end
       end
 
     with {:ok, body, headers} <- response do
@@ -98,14 +110,42 @@ defmodule PlugImageProcessing.Sources.URL do
 
     alias PlugImageProcessing.Sources.URL
 
-    def get_image(source, config) do
-      with {:ok, body, content_type, file_suffix} when is_binary(file_suffix) and is_binary(body) <- fetch_remote_image(source, config),
+    def get_image(source, operation_name, config) do
+      with :ok <- maybe_redirect(source, operation_name, config),
+           {:ok, body, content_type, file_suffix} when is_binary(file_suffix) and is_binary(body) <- fetch_remote_image(source, config),
            {:ok, image} <- Vix.Vips.Image.new_from_buffer(body, buffer_options(content_type)) do
         {:ok, image, content_type, file_suffix}
       else
-        error ->
-          Logger.error("[PlugImageProcessing] - Unable to fetch source URL. #{inspect(error)}")
+        {:http_timeout, message} ->
+          Logger.error("[PlugImageProcessing] - Timeout while fetching source URL: #{message}")
+          {:error, :timeout}
+
+        {:error, message} ->
+          Logger.error("[PlugImageProcessing] - Error while fetching source URL: #{message}")
           {:error, :invalid_file}
+
+        {:cached_error, url} ->
+          Logger.error("[PlugImageProcessing] - Cached error on #{url}")
+          {:error, :invalid_file}
+
+        {:http_error, status} ->
+          Logger.error("[PlugImageProcessing] - HTTP error while fetching source URL. Got #{status} on #{source.uri}")
+          {:error, :invalid_file}
+
+        {:redirect, url} ->
+          {:redirect, url}
+
+        error ->
+          Logger.error("[PlugImageProcessing] - Unable to fetch source URL: #{inspect(error)}")
+          {:error, :invalid_file}
+      end
+    end
+
+    defp maybe_redirect(source, operation_name, config) do
+      if operation_name in config.source_url_redirect_operations do
+        {:redirect, to_string(source.uri)}
+      else
+        :ok
       end
     end
 
@@ -119,7 +159,7 @@ defmodule PlugImageProcessing.Sources.URL do
         [:plug_image_processing, :source, :url, :request],
         metadata,
         fn ->
-          result = URL.fetch_body(source, config.http_client, config.http_client_cache)
+          result = URL.fetch_body(source, config.http_client_timeout, config.http_client_max_length, config.http_client, config.http_client_cache)
           {result, %{}}
         end
       )

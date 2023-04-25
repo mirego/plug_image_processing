@@ -64,7 +64,7 @@ defmodule PlugImageProcessing.Web do
 
   defp process_image(conn, operation_name, opts) do
     with {:ok, operation_name} <- PlugImageProcessing.cast_operation_name(operation_name, conn.private.plug_image_processing_config),
-         {:ok, image, content_type, suffix} <- PlugImageProcessing.get_image(conn.params, conn.private.plug_image_processing_config),
+         {:ok, image, content_type, suffix} <- PlugImageProcessing.get_image(conn.params, operation_name, conn.private.plug_image_processing_config),
          {:ok, image} <- PlugImageProcessing.operations(image, operation_name, conn.params, conn.private.plug_image_processing_config),
          {:ok, image} <- PlugImageProcessing.params_operations(image, conn.params, conn.private.plug_image_processing_config),
          {:ok, binary} <- PlugImageProcessing.write_to_buffer(image, suffix) do
@@ -77,6 +77,14 @@ defmodule PlugImageProcessing.Web do
 
       send_resp(conn, :ok, binary)
     else
+      {:redirect, location} ->
+        status = if conn.method in ~w(HEAD GET), do: :moved_permanently, else: :temporary_redirect
+
+        conn
+        |> put_resp_header("location", location)
+        |> send_resp(status, "")
+        |> halt()
+
       {:error, error} ->
         conn
         |> put_resp_header("cache-control", "private, no-cache, no-store, must-revalidate")

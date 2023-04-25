@@ -80,12 +80,12 @@ defmodule PlugImageProcessing do
     end
   end
 
-  @spec get_image(map(), config()) :: {:ok, image(), String.t() | nil, String.t()} | {:error, atom()}
-  def get_image(params, config) do
+  @spec get_image(map(), String.t(), config()) :: {:ok, image(), String.t() | nil, String.t()} | {:error, atom()}
+  def get_image(params, operation_name, config) do
     source = Enum.find_value(config.sources, &Source.cast(struct(&1), params))
 
     if source do
-      Source.get_image(source, config)
+      Source.get_image(source, operation_name, config)
     else
       {:error, :unknown_source}
     end

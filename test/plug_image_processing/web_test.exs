@@ -10,10 +10,15 @@ defmodule PlugImageProcessing.WebTest do
     @gif_image File.read!("test/support/image.gif")
 
     @behaviour PlugImageProcessing.Sources.HTTPClient
-    def get("http://example.org/valid.jpg"), do: {:ok, @image, [{"Content-type", "image/jpg"}]}
-    def get("http://example.org/valid.gif"), do: {:ok, @gif_image, [{"Content-type", "image/gif"}]}
-    def get("http://example.org/retry.jpg"), do: {:ok, @image, [{"Content-type", "image/jpg"}]}
-    def get("http://example.org/404.jpg"), do: {:error, "404 Not found"}
+    def get("http://example.org/valid.jpg", _), do: {:ok, @image, [{"Content-type", "image/jpg"}]}
+    def get("http://example.org/valid.gif", _), do: {:ok, @gif_image, [{"Content-type", "image/gif"}]}
+    def get("http://example.org/retry.jpg", _), do: {:ok, @image, [{"Content-type", "image/jpg"}]}
+    def get("http://example.org/404.jpg", _), do: {:error, "404 Not found"}
+
+    def get("http://example.org/timeout.jpg", _) do
+      Process.sleep(1000)
+      {:ok, @image, [{"Content-type", "image/jpg"}]}
+    end
   end
 
   setup do
@@ -30,11 +35,23 @@ defmodule PlugImageProcessing.WebTest do
   end
 
   describe "error handling" do
+    test "source URL timeout", %{config: config} do
+      config = Keyword.merge(config, http_client_timeout: 1)
+
+      plug_opts = Web.init(config)
+      conn = conn(:get, "/imageproxy/resize", %{width: 20, url: "http://example.org/timeout.jpg"})
+      conn = Web.call(conn, plug_opts)
+
+      assert conn.resp_body === "Bad request: :timeout"
+      assert conn.status === 400
+    end
+
     test "source URL 404", %{config: config} do
       plug_opts = Web.init(config)
       conn = conn(:get, "/imageproxy/resize", %{width: 20, url: "http://example.org/404.jpg"})
       conn = Web.call(conn, plug_opts)
 
+      assert conn.resp_body === "Bad request: :invalid_file"
       assert conn.status === 400
     end
 
@@ -106,6 +123,16 @@ defmodule PlugImageProcessing.WebTest do
       conn = Web.call(conn, plug_opts)
 
       assert conn.status === 200
+    end
+
+    test "echo redirect gif", %{config: config} do
+      config = Keyword.merge(config, source_url_redirect_operations: [""])
+      plug_opts = Web.init(config)
+      conn = conn(:get, "/imageproxy", %{url: "http://example.org/valid.gif"})
+      conn = Web.call(conn, plug_opts)
+
+      assert get_resp_header(conn, "location") === ["http://example.org/valid.gif"]
+      assert conn.status === 301
     end
 
     test "crop", %{config: config} do

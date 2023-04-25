@@ -4,7 +4,7 @@ defmodule PlugImageProcessing.Operations.WatermarkImage do
   import PlugImageProcessing.Options
 
   def new(image, params, config) do
-    with {:ok, sub} <- cast_remote_image(params["image"], config),
+    with {:ok, sub} <- cast_remote_image(params["image"], "watermarkimage", config),
          {:ok, left} <- cast_integer(params["left"]),
          {:ok, right} <- cast_integer(params["right"]),
          {:ok, bottom} <- cast_integer(params["bottom"]),

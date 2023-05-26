@@ -7,7 +7,7 @@ defmodule PlugImageProcessing do
   @type image :: Vix.Vips.Image.t()
   @type config :: PlugImageProcessing.Config.t()
 
-  @spec generate_url(String.t(), map(), Operation.t(), map()) :: String.t()
+  @spec generate_url(String.t(), Enumerable.t(), atom(), map()) :: String.t()
   def generate_url(url, config, operation, query) do
     config = struct!(PlugImageProcessing.Config, config)
 

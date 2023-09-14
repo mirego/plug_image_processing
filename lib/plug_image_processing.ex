@@ -1,4 +1,5 @@
 defmodule PlugImageProcessing do
+  alias PlugImageProcessing.Info
   alias PlugImageProcessing.Middleware
   alias PlugImageProcessing.Middlewares.SignatureKey
   alias PlugImageProcessing.Operation
@@ -6,6 +7,7 @@ defmodule PlugImageProcessing do
 
   @type image :: Vix.Vips.Image.t()
   @type config :: PlugImageProcessing.Config.t()
+  @type image_metadata :: PlugImageProcessing.ImageMetadata.t()
 
   @spec generate_url(String.t(), Enumerable.t(), atom(), map()) :: String.t()
   def generate_url(url, config, operation, query) do
@@ -70,6 +72,9 @@ defmodule PlugImageProcessing do
       Operation.process(operation, config)
     end
   end
+
+  @spec info(image()) :: {:ok, image_metadata()} | {:error, atom()}
+  def info(image), do: Info.process(%PlugImageProcessing.Operations.Info{image: image})
 
   @spec cast_operation_name(String.t(), config()) :: {:ok, String.t()} | {:error, atom()}
   def cast_operation_name(name, config) do

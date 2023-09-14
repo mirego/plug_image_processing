@@ -62,6 +62,26 @@ defmodule PlugImageProcessing.Web do
     put_private(conn, :plug_image_processing_config, struct!(PlugImageProcessing.Config, config))
   end
 
+  defp process_image(conn, "info" = operation_name, opts) do
+    with {:ok, image, _, _} <- PlugImageProcessing.get_image(conn.params, operation_name, conn.private.plug_image_processing_config),
+         {:ok, image_metadata} <- PlugImageProcessing.info(image) do
+      send_resp(conn, :ok, Jason.encode!(image_metadata))
+    else
+      {:redirect, location} ->
+        status = if conn.method in ~w(HEAD GET), do: :moved_permanently, else: :temporary_redirect
+
+        conn
+        |> put_resp_header("location", location)
+        |> send_resp(status, "")
+        |> halt()
+
+      {:error, error} ->
+        conn
+        |> put_resp_header("cache-control", "private, no-cache, no-store, must-revalidate")
+        |> handle_error(operation_name, error, opts)
+    end
+  end
+
   defp process_image(conn, operation_name, opts) do
     with {:ok, operation_name} <- PlugImageProcessing.cast_operation_name(operation_name, conn.private.plug_image_processing_config),
          {:ok, image, content_type, suffix} <- PlugImageProcessing.get_image(conn.params, operation_name, conn.private.plug_image_processing_config),

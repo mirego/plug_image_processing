@@ -15,7 +15,8 @@ defmodule PlugImageProcessing.Config do
     {"extract", Operations.ExtractArea},
     {"resize", Operations.Resize},
     {"smartcrop", Operations.Smartcrop},
-    {"pipeline", Operations.Pipeline}
+    {"pipeline", Operations.Pipeline},
+    {"info", Operations.Info}
   ]
 
   @middlewares [

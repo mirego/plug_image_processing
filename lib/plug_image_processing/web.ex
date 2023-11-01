@@ -65,7 +65,9 @@ defmodule PlugImageProcessing.Web do
   defp process_image(conn, "info" = operation_name, opts) do
     with {:ok, image, _, _} <- PlugImageProcessing.get_image(conn.params, operation_name, conn.private.plug_image_processing_config),
          {:ok, image_metadata} <- PlugImageProcessing.info(image) do
-      send_resp(conn, :ok, Jason.encode!(image_metadata))
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, Jason.encode!(image_metadata))
     else
       {:redirect, location} ->
         status = if conn.method in ~w(HEAD GET), do: :moved_permanently, else: :temporary_redirect

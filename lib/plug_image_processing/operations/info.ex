@@ -3,6 +3,10 @@ defmodule PlugImageProcessing.Operations.Info do
 
   alias Vix.Vips.Image
 
+  def new(_image, _params, _config) do
+    {:error, :invalid_operation}
+  end
+
   defimpl PlugImageProcessing.Info do
     def process(operation) do
       {:ok,

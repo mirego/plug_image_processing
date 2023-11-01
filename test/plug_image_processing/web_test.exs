@@ -157,5 +157,31 @@ defmodule PlugImageProcessing.WebTest do
       assert image_metadata["has_alpha"] === false
       assert image_metadata["channels"] === 3
     end
+
+    test "pipeline", %{config: config} do
+      plug_opts = Web.init(config)
+      conn = conn(:get, "/imageproxy/pipeline", %{operations: Jason.encode!([%{operation: "crop", params: %{width: 20, height: 50}}]), url: "http://example.org/valid.jpg"})
+      conn = Web.call(conn, plug_opts)
+
+      {:ok, image} = conn_to_image(conn)
+
+      assert Image.width(image) === 20
+      assert Image.height(image) === 50
+    end
+
+    test "pipeline info", %{config: config} do
+      plug_opts = Web.init(config)
+
+      conn =
+        conn(:get, "/imageproxy/pipeline", %{
+          operations: Jason.encode!([%{operation: "crop", params: %{width: 20, height: 50}}, %{operation: "info"}]),
+          url: "http://example.org/valid.jpg"
+        })
+
+      conn = Web.call(conn, plug_opts)
+
+      assert conn.status === 400
+      assert conn.resp_body === "Bad request: :invalid_operation"
+    end
   end
 end

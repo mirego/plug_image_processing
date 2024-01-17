@@ -14,6 +14,8 @@ defmodule PlugImageProcessing.Middlewares.SignatureKey do
       |> Map.drop(["sign"])
       |> URI.encode_query()
 
+    IO.inspect(url_path <> url_query)
+
     Base.url_encode64(:crypto.mac(:hmac, :sha256, config.url_signature_key, url_path <> url_query))
   end
 

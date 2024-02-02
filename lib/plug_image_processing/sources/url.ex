@@ -5,7 +5,7 @@ defmodule PlugImageProcessing.Sources.URL do
 
   alias PlugImageProcessing.Options
 
-  @valid_types ~w(jpg jpeg png webp gif)
+  @valid_types ~w(jpg jpeg png webp gif svg svg+xml)
 
   def fetch_body(source, http_client_timeout, http_client_max_length, http_client, http_client_cache) do
     metadata = %{uri: source.uri}
@@ -88,6 +88,15 @@ defmodule PlugImageProcessing.Sources.URL do
           |> Options.encode_suffix()
 
         {"image/gif", type <> options}
+
+      # Since libvips can read SVG format but not serve it, we just convert the SVG into a PNG.
+      ".svg" ->
+        options =
+          [{"strip", Options.cast_boolean(source.params["stripmeta"])}]
+          |> Options.build()
+          |> Options.encode_suffix()
+
+        {"image/png", ".png" <> options}
 
       "." <> type_name ->
         options =

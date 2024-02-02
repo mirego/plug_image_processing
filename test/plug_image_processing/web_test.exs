@@ -8,10 +8,12 @@ defmodule PlugImageProcessing.WebTest do
   defmodule HTTPMock do
     @image File.read!("test/support/image.jpg")
     @gif_image File.read!("test/support/image.gif")
+    @svg_image File.read!("test/support/image.svg")
 
     @behaviour PlugImageProcessing.Sources.HTTPClient
     def get("http://example.org/valid.jpg", _), do: {:ok, @image, [{"Content-type", "image/jpg"}]}
     def get("http://example.org/valid.gif", _), do: {:ok, @gif_image, [{"Content-type", "image/gif"}]}
+    def get("http://example.org/valid.svg", _), do: {:ok, @svg_image, [{"Content-type", "image/svg_xml"}]}
     def get("http://example.org/retry.jpg", _), do: {:ok, @image, [{"Content-type", "image/jpg"}]}
     def get("http://example.org/404.jpg", _), do: {:error, "404 Not found"}
 
@@ -117,9 +119,26 @@ defmodule PlugImageProcessing.WebTest do
       assert Image.width(image) === 20
     end
 
+    test "resize svg", %{config: config} do
+      plug_opts = Web.init(config)
+      conn = conn(:get, "/imageproxy/resize", %{width: 20, url: "http://example.org/valid.svg"})
+      conn = Web.call(conn, plug_opts)
+      {:ok, image} = conn_to_image(conn)
+
+      assert Image.width(image) === 20
+    end
+
     test "echo gif", %{config: config} do
       plug_opts = Web.init(config)
       conn = conn(:get, "/imageproxy", %{url: "http://example.org/valid.gif"})
+      conn = Web.call(conn, plug_opts)
+
+      assert conn.status === 200
+    end
+
+    test "echo svg", %{config: config} do
+      plug_opts = Web.init(config)
+      conn = conn(:get, "/imageproxy", %{url: "http://example.org/valid.svg"})
       conn = Web.call(conn, plug_opts)
 
       assert conn.status === 200

@@ -70,17 +70,17 @@ Then a request path like:
 
 will fail because the `sign` parameter is not present.
 
-**The HMAC-SHA256 hash is created by taking the URL path (including the leading /), the request parameters (alphabetically-sorted and concatenated with & into a string). The hash is then base64url-encoded.**
+**The HMAC-SHA256 hash is created by taking the URL path (excluding the leading /), the request parameters (alphabetically-sorted and concatenated with & into a string). The hash is then base64url-encoded.**
 
 ```elixir
-Base.url_encode64(:crypto.mac(:hmac, :sha256, "1234", "/resize" <> "quality=60&url=https://s3.ca-central-1.amazonaws.com/my_image.jpg&width=300"))
-# => "O8Xo9xrP0fM67PIWMIRL2hjkD_c5HzzBtRLfpo43ENY="
+Base.url_encode64(:crypto.mac(:hmac, :sha256, "1234", "resize" <> "quality=60&url=https://s3.ca-central-1.amazonaws.com/my_image.jpg&width=300"))
+# => "ku5SCH56vrsqEr-_VRDOFJHqa6AXslh3fpAelPAPoeI="
 ```
 
 Now this request will succeed!
 
 ```sh
-/imageproxy/resize?url=https://s3.ca-central-1.amazonaws.com/my_image.jpg&width=300&quality=60&sign=O8Xo9xrP0fM67PIWMIRL2hjkD_c5HzzBtRLfpo43ENY=
+/imageproxy/resize?url=https://s3.ca-central-1.amazonaws.com/my_image.jpg&width=300&quality=60&sign=ku5SCH56vrsqEr-_VRDOFJHqa6AXslh3fpAelPAPoeI=
 ```
 
 ## License

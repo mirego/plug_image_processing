@@ -13,7 +13,8 @@ defmodule PlugImageProcessing.WebTest do
     @behaviour PlugImageProcessing.Sources.HTTPClient
     def get("http://example.org/valid.jpg", _), do: {:ok, @image, [{"Content-type", "image/jpg"}]}
     def get("http://example.org/valid.gif", _), do: {:ok, @gif_image, [{"Content-type", "image/gif"}]}
-    def get("http://example.org/valid.svg", _), do: {:ok, @svg_image, [{"Content-type", "image/svg_xml"}]}
+    def get("http://example.org/valid.svg", _), do: {:ok, @svg_image, [{"Content-type", "image/svg"}]}
+    def get("http://example.org/valid-xml.svg", _), do: {:ok, @svg_image, [{"Content-type", "image/svg+xml"}]}
     def get("http://example.org/retry.jpg", _), do: {:ok, @image, [{"Content-type", "image/jpg"}]}
     def get("http://example.org/404.jpg", _), do: {:error, "404 Not found"}
 
@@ -139,6 +140,14 @@ defmodule PlugImageProcessing.WebTest do
     test "echo svg", %{config: config} do
       plug_opts = Web.init(config)
       conn = conn(:get, "/imageproxy", %{url: "http://example.org/valid.svg"})
+      conn = Web.call(conn, plug_opts)
+
+      assert conn.status === 200
+    end
+
+    test "echo svg+xml", %{config: config} do
+      plug_opts = Web.init(config)
+      conn = conn(:get, "/imageproxy", %{url: "http://example.org/valid-xml.svg"})
       conn = Web.call(conn, plug_opts)
 
       assert conn.status === 200

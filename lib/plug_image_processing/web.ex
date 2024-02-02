@@ -6,6 +6,7 @@ defmodule PlugImageProcessing.Web do
   plug(:cast_config)
   plug(:assign_operation_name)
   plug(:run_middlewares)
+  plug(:fetch_query_params)
   plug(:action)
 
   def call(conn, opts) do

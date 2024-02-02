@@ -5,7 +5,19 @@ defmodule PlugImageProcessing.Sources.URL do
 
   alias PlugImageProcessing.Options
 
-  @valid_types ~w(jpg jpeg png webp gif svg svg+xml)
+  @types_extensions_mapping %{
+    "jpg" => ".jpg",
+    "jpeg" => ".jpg",
+    "png" => ".png",
+    "webp" => ".webp",
+    "gif" => ".gif",
+    "svg" => ".svg",
+    "svg+xml" => ".svg"
+  }
+
+  @valid_types Map.keys(@types_extensions_mapping)
+  @valid_extensions Map.values(@types_extensions_mapping)
+  @extensions_types_mapping Map.new(@types_extensions_mapping, fn {k, v} -> {v, k} end)
 
   def fetch_body(source, http_client_timeout, http_client_max_length, http_client, http_client_cache) do
     metadata = %{uri: source.uri}
@@ -58,27 +70,35 @@ defmodule PlugImageProcessing.Sources.URL do
     end
   end
 
+  defp get_file_suffix_from_http_header(content_type) do
+    content_type = String.trim_leading(content_type, "image/")
+
+    if content_type in @valid_types do
+      content_type
+    end
+  end
+
+  defp get_file_suffix_from_query_params(params) do
+    if params["type"] in @valid_types do
+      params["type"]
+    end
+  end
+
+  defp get_file_suffix_from_uri(uri) do
+    case uri.path && Path.extname(uri.path) do
+      "." <> content_type -> content_type
+      _ -> nil
+    end
+  end
+
   defp get_file_suffix(source, content_type) do
-    # Find the type in the source response content-type header
-    type = String.trim_leading(content_type, "image/")
+    image_type = get_file_suffix_from_query_params(source.params)
+    # If "type" query param is not found or is invalid, fallback to HTTP header
+    image_type = image_type || get_file_suffix_from_http_header(content_type)
+    # If HTTP header "Content-Type" is not found or is invalid, fallback to source uri
+    image_type = image_type || get_file_suffix_from_uri(source.uri)
 
-    type =
-      if type in @valid_types do
-        "." <> type
-      else
-        nil
-      end
-
-    # Find the type in the client provided "type" query param
-    type =
-      if source.params["type"] in @valid_types do
-        "." <> source.params["type"]
-      else
-        type
-      end
-
-    # Fallback to the extension name of the "url" query param
-    type = type || (source.uri.path && Path.extname(source.uri.path))
+    type = Map.get(@types_extensions_mapping, image_type)
 
     case type do
       ".gif" ->
@@ -98,16 +118,22 @@ defmodule PlugImageProcessing.Sources.URL do
 
         {"image/png", ".png" <> options}
 
-      "." <> type_name ->
-        options =
-          [
-            {"Q", Options.cast_integer(source.params["quality"])},
-            {"strip", Options.cast_boolean(source.params["stripmeta"])}
-          ]
-          |> Options.build()
-          |> Options.encode_suffix()
+      extension_name when extension_name in @valid_extensions ->
+        content_type = Map.get(@extensions_types_mapping, extension_name)
 
-        {"image/#{type_name}", type <> options}
+        if content_type do
+          options =
+            [
+              {"Q", Options.cast_integer(source.params["quality"])},
+              {"strip", Options.cast_boolean(source.params["stripmeta"])}
+            ]
+            |> Options.build()
+            |> Options.encode_suffix()
+
+          {"image/#{content_type}", type <> options}
+        else
+          :invalid_file_type
+        end
 
       _ ->
         :invalid_file_type

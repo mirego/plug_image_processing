@@ -17,6 +17,7 @@ defmodule PlugImageProcessing.WebTest do
     def get("http://example.org/valid-xml.svg", _), do: {:ok, @svg_image, [{"Content-type", "image/svg+xml"}]}
     def get("http://example.org/retry.jpg", _), do: {:ok, @image, [{"Content-type", "image/jpg"}]}
     def get("http://example.org/404.jpg", _), do: {:error, "404 Not found"}
+    def get("http://example.org/index.html", _), do: {:ok, "<html></html>", [{"Content-type", "text/html"}]}
 
     def get("http://example.org/timeout.jpg", _) do
       Process.sleep(1000)
@@ -46,6 +47,15 @@ defmodule PlugImageProcessing.WebTest do
       conn = Web.call(conn, plug_opts)
 
       assert conn.resp_body === "Bad request: :timeout"
+      assert conn.status === 400
+    end
+
+    test "source URL invalid type", %{config: config} do
+      plug_opts = Web.init(config)
+      conn = conn(:get, "/imageproxy/resize", %{width: 20, url: "http://example.org/index.html"})
+      conn = Web.call(conn, plug_opts)
+
+      assert conn.resp_body === "Bad request: :invalid_file_type"
       assert conn.status === 400
     end
 

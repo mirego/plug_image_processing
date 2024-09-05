@@ -64,9 +64,13 @@ defmodule PlugImageProcessing.Sources.URL do
           _ -> ""
         end
 
-      {content_type, file_suffix} = get_file_suffix(source, content_type)
+      case get_file_suffix(source, content_type) do
+        {:invalid_file_type, type} ->
+          {:file_type_error, "Invalid file type: #{type}"}
 
-      {:ok, body, content_type, file_suffix}
+        {content_type, file_suffix} ->
+          {:ok, body, content_type, file_suffix}
+      end
     end
   end
 
@@ -132,11 +136,11 @@ defmodule PlugImageProcessing.Sources.URL do
 
           {"image/#{content_type}", type <> options}
         else
-          :invalid_file_type
+          {:invalid_file_type, extension_name}
         end
 
       _ ->
-        :invalid_file_type
+        {:invalid_file_type, image_type}
     end
   end
 
@@ -162,6 +166,10 @@ defmodule PlugImageProcessing.Sources.URL do
         {:cached_error, url} ->
           Logger.error("[PlugImageProcessing] - Cached error on #{url}")
           {:error, :invalid_file}
+
+        {:file_type_error, message} ->
+          Logger.error("[PlugImageProcessing] - File type error while fetching source URL. Got #{message} on #{source.uri}")
+          {:error, :invalid_file_type}
 
         {:http_error, status} ->
           Logger.error("[PlugImageProcessing] - HTTP error while fetching source URL. Got #{status} on #{source.uri}")

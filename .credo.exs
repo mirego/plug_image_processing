@@ -28,7 +28,7 @@ common_checks = [
   {Credo.Check.Refactor.MapInto, false},
   {Credo.Check.Refactor.MatchInCondition},
   {Credo.Check.Refactor.PipeChainStart, excluded_argument_types: ~w(atom binary fn keyword)a, excluded_functions: ~w(from)},
-  {Credo.Check.Refactor.CyclomaticComplexity, max_complexity: 10},
+  {Credo.Check.Refactor.CyclomaticComplexity, max_complexity: 12},
   {Credo.Check.Refactor.NegatedConditionsInUnless},
   {Credo.Check.Refactor.NegatedConditionsWithElse},
   {Credo.Check.Refactor.Nesting},

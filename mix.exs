@@ -7,7 +7,7 @@ defmodule PlugImageProcessing.Mixfile do
     [
       app: :plug_image_processing,
       version: @version,
-      elixir: "~> 1.17",
+      elixir: "~> 1.13",
       package: package(),
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),

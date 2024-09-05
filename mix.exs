@@ -7,7 +7,7 @@ defmodule PlugImageProcessing.Mixfile do
     [
       app: :plug_image_processing,
       version: @version,
-      elixir: "~> 1.13",
+      elixir: "~> 1.17",
       package: package(),
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
@@ -42,9 +42,10 @@ defmodule PlugImageProcessing.Mixfile do
       {:hackney, "~> 1.18"},
       {:telemetry, "~> 1.0"},
       {:jason, "~> 1.0"},
-      {:telemetry_metrics, "~> 0.6"},
+      {:telemetry_metrics, "~> 0.6 or ~> 1.0"},
 
       # Linting
+      {:styler, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.1", only: [:dev, :test]},
       {:credo_envvar, "~> 0.1", only: [:dev, :test], runtime: false},
       {:credo_naming, "~> 2.0", only: [:dev, :test], runtime: false},

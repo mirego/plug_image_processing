@@ -1,4 +1,5 @@
 defmodule PlugImageProcessing.Sources.HTTPClientCache.Default do
+  @moduledoc false
   @behaviour PlugImageProcessing.Sources.HTTPClientCache
 
   def invalid_source?(_source), do: false

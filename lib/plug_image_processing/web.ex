@@ -1,4 +1,5 @@
 defmodule PlugImageProcessing.Web do
+  @moduledoc false
   use Plug.Builder
 
   import Plug.Conn

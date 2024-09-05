@@ -1,4 +1,5 @@
 defmodule PlugImageProcessing.Config do
+  @moduledoc false
   alias PlugImageProcessing.Middlewares
   alias PlugImageProcessing.Operations
   alias PlugImageProcessing.Sources

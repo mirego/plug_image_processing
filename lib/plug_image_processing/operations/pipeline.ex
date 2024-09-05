@@ -1,7 +1,8 @@
 defmodule PlugImageProcessing.Operations.Pipeline do
-  defstruct image: nil, operations: nil
-
+  @moduledoc false
   import PlugImageProcessing.Options
+
+  defstruct image: nil, operations: nil
 
   def new(image, params, _config) do
     with {:ok, operations} <- cast_json(params["operations"]) do

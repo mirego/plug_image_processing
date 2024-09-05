@@ -1,4 +1,5 @@
 defmodule PlugImageProcessing.Operations.Smartcrop do
+  @moduledoc false
   import PlugImageProcessing.Options
 
   def new(image, params, _config) do

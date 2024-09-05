@@ -1,7 +1,8 @@
 defmodule PlugImageProcessing.Operations.Flip do
-  defstruct image: nil, direction: nil
-
+  @moduledoc false
   import PlugImageProcessing.Options
+
+  defstruct image: nil, direction: nil
 
   def new(image, params, _config) do
     with {:ok, direction} <- cast_direction(params["flip"], :VIPS_DIRECTION_HORIZONTAL),

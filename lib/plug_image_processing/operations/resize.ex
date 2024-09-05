@@ -1,7 +1,10 @@
 defmodule PlugImageProcessing.Operations.Resize do
-  defstruct image: nil, width: nil, height: nil
-
+  @moduledoc false
   import PlugImageProcessing.Options
+
+  alias Vix.Vips.Image
+
+  defstruct image: nil, width: nil, height: nil
 
   def new(image, params, _config) do
     with {:ok, width} <- cast_integer(params["w"] || params["width"]),
@@ -25,8 +28,8 @@ defmodule PlugImageProcessing.Operations.Resize do
     end
 
     def process(operation, _config) do
-      hscale = operation.width / Vix.Vips.Image.width(operation.image) * 1.0
-      vscale = if operation.height, do: operation.height / Vix.Vips.Image.height(operation.image)
+      hscale = operation.width / Image.width(operation.image) * 1.0
+      vscale = if operation.height, do: operation.height / Image.height(operation.image)
 
       options = PlugImageProcessing.Options.build(vscale: vscale)
 

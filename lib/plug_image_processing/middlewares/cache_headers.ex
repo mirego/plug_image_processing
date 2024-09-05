@@ -1,4 +1,5 @@
 defmodule PlugImageProcessing.Middlewares.CacheHeaders do
+  @moduledoc false
   defstruct config: nil
 
   defimpl PlugImageProcessing.Middleware do

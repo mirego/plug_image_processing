@@ -1,9 +1,10 @@
 defmodule PlugImageProcessing.Sources.URL do
+  @moduledoc false
+  alias PlugImageProcessing.Options
+
   defstruct uri: nil, params: nil
 
   @type t :: %__MODULE__{}
-
-  alias PlugImageProcessing.Options
 
   @types_extensions_mapping %{
     "jpg" => ".jpg",
@@ -145,9 +146,9 @@ defmodule PlugImageProcessing.Sources.URL do
   end
 
   defimpl PlugImageProcessing.Source do
-    require Logger
-
     alias PlugImageProcessing.Sources.URL
+
+    require Logger
 
     def get_image(source, operation_name, config) do
       with :ok <- maybe_redirect(source, operation_name, config),

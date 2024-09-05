@@ -1,4 +1,5 @@
 defmodule PlugImageProcessing.Operations.Echo do
+  @moduledoc false
   defstruct image: nil
 
   def new(image, _params, _config) do

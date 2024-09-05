@@ -1,10 +1,11 @@
 defmodule PlugImageProcessing.Middlewares.AllowedOrigins do
+  @moduledoc false
   defstruct config: nil
 
   defimpl PlugImageProcessing.Middleware do
-    require Logger
-
     import Plug.Conn
+
+    require Logger
 
     def enabled?(middleware, conn) do
       not is_nil(conn.params["url"]) and is_list(middleware.config.allowed_origins)

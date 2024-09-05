@@ -1,7 +1,8 @@
 defmodule PlugImageProcessing.Operations.Info do
-  defstruct image: nil
-
+  @moduledoc false
   alias Vix.Vips.Image
+
+  defstruct image: nil
 
   def new(_image, _params, _config) do
     {:error, :invalid_operation}

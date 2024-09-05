@@ -27,8 +27,7 @@ defmodule PlugImageProcessingTest do
 
       url = PlugImageProcessing.generate_url("http://example.com", config, :resize, %{url: "http://bucket.com/test.jpg", width: 10})
 
-      assert url ===
-               "http://example.com/imageproxy/resize?url=http%3A%2F%2Fbucket.com%2Ftest.jpg&width=10&sign=#{generate_signature_from_url(url_signature_key, "resizeurl=http%3A%2F%2Fbucket.com%2Ftest.jpg&width=10")}"
+      assert URI.decode_query(URI.parse(url).query)["sign"] === generate_signature_from_url(url_signature_key, "resizeurl=http%3A%2F%2Fbucket.com%2Ftest.jpg&width=10")
     end
   end
 

@@ -1,4 +1,7 @@
 defmodule PlugImageProcessing.Options do
+  @moduledoc false
+  alias PlugImageProcessing.Sources.URL
+
   def build(options) do
     options
     |> Enum.map(fn
@@ -11,7 +14,7 @@ defmodule PlugImageProcessing.Options do
 
   def encode_suffix(options) do
     options = Enum.map_join(options, ",", fn {key, value} -> "#{key}=#{value}" end)
-    if options !== "", do: "[#{options}]", else: options
+    if options === "", do: options, else: "[#{options}]"
   end
 
   def cast_direction(value, default \\ nil)
@@ -25,7 +28,7 @@ defmodule PlugImageProcessing.Options do
   def cast_boolean(_, default), do: {:ok, default}
 
   def cast_remote_image(url, operation_name, config) do
-    with %PlugImageProcessing.Sources.URL{} = source <- PlugImageProcessing.Source.cast(%PlugImageProcessing.Sources.URL{}, %{"url" => url}),
+    with %URL{} = source <- PlugImageProcessing.Source.cast(%URL{}, %{"url" => url}),
          {:ok, image, _, _} <- PlugImageProcessing.Source.get_image(source, operation_name, config) do
       {:ok, image}
     end

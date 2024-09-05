@@ -1,4 +1,5 @@
 defmodule PlugImageProcessing.Middlewares.SignatureKey do
+  @moduledoc false
   defstruct config: nil
 
   def generate_signature(url, config) do
@@ -11,16 +12,16 @@ defmodule PlugImageProcessing.Middlewares.SignatureKey do
       |> URI.decode_query()
       |> Enum.sort_by(fn {key, _} -> key end)
       |> Map.new()
-      |> Map.drop(["sign"])
+      |> Map.delete("sign")
       |> URI.encode_query()
 
     Base.url_encode64(:crypto.mac(:hmac, :sha256, config.url_signature_key, url_path <> url_query))
   end
 
   defimpl PlugImageProcessing.Middleware do
-    require Logger
-
     import Plug.Conn
+
+    require Logger
 
     def enabled?(middleware, _conn), do: is_binary(middleware.config.url_signature_key)
 

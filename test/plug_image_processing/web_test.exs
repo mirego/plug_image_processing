@@ -6,11 +6,13 @@ defmodule PlugImageProcessing.WebTest do
   alias Vix.Vips.Image
 
   defmodule HTTPMock do
+    @moduledoc false
+    @behaviour PlugImageProcessing.Sources.HTTPClient
+
     @image File.read!("test/support/image.jpg")
     @gif_image File.read!("test/support/image.gif")
     @svg_image File.read!("test/support/image.svg")
 
-    @behaviour PlugImageProcessing.Sources.HTTPClient
     def get("http://example.org/valid.jpg", _), do: {:ok, @image, [{"Content-type", "image/jpg"}]}
     def get("http://example.org/valid.gif", _), do: {:ok, @gif_image, [{"Content-type", "image/gif"}]}
     def get("http://example.org/valid.svg", _), do: {:ok, @svg_image, [{"Content-type", "image/svg"}]}
@@ -40,7 +42,7 @@ defmodule PlugImageProcessing.WebTest do
 
   describe "error handling" do
     test "source URL timeout", %{config: config} do
-      config = Keyword.merge(config, http_client_timeout: 1)
+      config = Keyword.put(config, :http_client_timeout, 1)
 
       plug_opts = Web.init(config)
       conn = conn(:get, "/imageproxy/resize", %{width: 20, url: "http://example.org/timeout.jpg"})
@@ -164,7 +166,7 @@ defmodule PlugImageProcessing.WebTest do
     end
 
     test "echo redirect gif", %{config: config} do
-      config = Keyword.merge(config, source_url_redirect_operations: [""])
+      config = Keyword.put(config, :source_url_redirect_operations, [""])
       plug_opts = Web.init(config)
       conn = conn(:get, "/imageproxy", %{url: "http://example.org/valid.gif"})
       conn = Web.call(conn, plug_opts)

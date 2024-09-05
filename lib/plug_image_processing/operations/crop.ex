@@ -1,7 +1,10 @@
 defmodule PlugImageProcessing.Operations.Crop do
-  defstruct image: nil, left: 0, top: 0, width: nil, height: nil, gravity: nil
-
+  @moduledoc false
   import PlugImageProcessing.Options
+
+  alias Vix.Vips.Operation
+
+  defstruct image: nil, left: 0, top: 0, width: nil, height: nil, gravity: nil
 
   def new(image, params, _config) do
     with {:ok, width} <- cast_integer(params["width"]),
@@ -30,11 +33,11 @@ defmodule PlugImageProcessing.Operations.Crop do
     end
 
     def process(%{gravity: "smart"} = operation, _config) do
-      Vix.Vips.Operation.smartcrop(operation.image, operation.width, operation.height)
+      Operation.smartcrop(operation.image, operation.width, operation.height)
     end
 
     def process(operation, _config) do
-      Vix.Vips.Operation.extract_area(
+      Operation.extract_area(
         operation.image,
         operation.left,
         operation.top,

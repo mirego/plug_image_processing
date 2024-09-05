@@ -1,4 +1,5 @@
 defmodule PlugImageProcessing.Sources.HTTPClient.Hackney do
+  @moduledoc false
   @behaviour PlugImageProcessing.Sources.HTTPClient
 
   def get(url, max_length) do

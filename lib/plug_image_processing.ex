@@ -1,11 +1,13 @@
 defmodule PlugImageProcessing do
+  @moduledoc false
   alias PlugImageProcessing.Info
   alias PlugImageProcessing.Middleware
   alias PlugImageProcessing.Middlewares.SignatureKey
   alias PlugImageProcessing.Operation
   alias PlugImageProcessing.Source
+  alias Vix.Vips.Image
 
-  @type image :: Vix.Vips.Image.t()
+  @type image :: Image.t()
   @type config :: PlugImageProcessing.Config.t()
   @type image_metadata :: PlugImageProcessing.ImageMetadata.t()
 
@@ -55,7 +57,7 @@ defmodule PlugImageProcessing do
       end)
 
     case image do
-      %Vix.Vips.Image{} = image -> {:ok, image}
+      %Image{} = image -> {:ok, image}
       error -> error
     end
   end
@@ -85,7 +87,7 @@ defmodule PlugImageProcessing do
     end
   end
 
-  @spec get_image(map(), String.t(), config()) :: {:ok, image(), String.t() | nil, String.t()} | {:error, atom()}
+  @spec get_image(map(), String.t(), config()) :: {:ok, image(), String.t() | nil, String.t()} | {:error, atom()} | {:redirect, String.t()}
   def get_image(params, operation_name, config) do
     source = Enum.find_value(config.sources, &Source.cast(struct(&1), params))
 
@@ -98,6 +100,6 @@ defmodule PlugImageProcessing do
 
   @spec write_to_buffer(image(), String.t()) :: {:ok, binary()} | {:error, term()}
   def write_to_buffer(image, file_extension) do
-    Vix.Vips.Image.write_to_buffer(image, file_extension)
+    Image.write_to_buffer(image, file_extension)
   end
 end

@@ -1,7 +1,8 @@
 defmodule PlugImageProcessing.Operations.WatermarkImage do
-  defstruct image: nil, sub: nil, left: nil, top: nil, right: nil, bottom: nil, http_client: nil
-
+  @moduledoc false
   import PlugImageProcessing.Options
+
+  defstruct image: nil, sub: nil, left: nil, top: nil, right: nil, bottom: nil, http_client: nil
 
   def new(image, params, config) do
     with {:ok, sub} <- cast_remote_image(params["image"], "watermarkimage", config),

@@ -1,6 +1,8 @@
 defmodule PlugImageProcessing.WebTest do
   use ExUnit.Case, async: true
-  use Plug.Test
+
+  import Plug.Conn
+  import Plug.Test
 
   alias PlugImageProcessing.Web
   alias Vix.Vips.Image

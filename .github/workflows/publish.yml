@@ -11,7 +11,7 @@ jobs:
     env:
       HEX_API_KEY: ${{ secrets.MIREGO_HEXPM_API_KEY }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
           otp-version: 25.x

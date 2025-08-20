@@ -14,14 +14,14 @@ jobs:
       MIX_ENV: test
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: erlef/setup-elixir@v1
+      - uses: erlef/setup-elixir@v2
         with:
           elixir-version: ${{ matrix.elixir-version }}
           otp-version: ${{ matrix.otp-version }}
 
-      - uses: actions/cache@v1
+      - uses: actions/cache@v4
         id: deps-cache
         with:
           path: deps
@@ -29,7 +29,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deps-
 
-      - uses: actions/cache@v1
+      - uses: actions/cache@v4
         id: build-cache
         with:
           path: _build

@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: erlef/setup-elixir@v2
+      - uses: erlef/setup-beam@v1
         with:
           elixir-version: ${{ matrix.elixir-version }}
           otp-version: ${{ matrix.otp-version }}

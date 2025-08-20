@@ -33,7 +33,13 @@ defmodule PlugImageProcessing.Operations.Crop do
     end
 
     def process(%{gravity: "smart"} = operation, _config) do
-      Operation.smartcrop(operation.image, operation.width, operation.height)
+      case Operation.smartcrop(operation.image, operation.width, operation.height) do
+        {:ok, {cropped_image, _}} when is_struct(cropped_image, Vix.Vips.Image) ->
+          {:ok, cropped_image}
+
+        error ->
+          error
+      end
     end
 
     def process(operation, _config) do

@@ -32,10 +32,12 @@ defmodule PlugImageProcessing.Middlewares.SignatureKey do
           middleware.config
         )
 
-      if valid_sign === conn.params["sign"] do
+      provided_sign = conn.params["sign"] || ""
+
+      if Plug.Crypto.secure_compare(valid_sign, provided_sign) do
         conn
       else
-        Logger.error("[PlugImageProcessing] - Invalid signature. Got: #{inspect(conn.params["sign"])}, expected: #{valid_sign}")
+        Logger.error("[PlugImageProcessing] - Invalid signature. Got: #{inspect(conn.params["sign"])}")
 
         conn
         |> send_resp(:unauthorized, "Unauthorized: Invalid signature")

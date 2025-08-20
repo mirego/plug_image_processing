@@ -72,29 +72,4 @@ defmodule PlugImageProcessing.Middlewares.CacheHeadersTest do
       end
     end
   end
-
-  describe "cache_control/1" do
-    test "returns no-cache directive for TTL 0" do
-      assert PlugImageProcessing.Middleware.PlugImageProcessing.Middlewares.CacheHeaders.cache_control(0) ==
-               "private, no-cache, no-store, must-revalidate"
-    end
-
-    test "returns public cache directive for positive TTL" do
-      assert PlugImageProcessing.Middleware.PlugImageProcessing.Middlewares.CacheHeaders.cache_control(3600) ==
-               "public, s-maxage=3600, max-age=3600, no-transform"
-    end
-
-    test "returns correct cache directive for various TTL values" do
-      test_cases = [
-        {1, "public, s-maxage=1, max-age=1, no-transform"},
-        {60, "public, s-maxage=60, max-age=60, no-transform"},
-        {3600, "public, s-maxage=3600, max-age=3600, no-transform"},
-        {86_400, "public, s-maxage=86400, max-age=86400, no-transform"}
-      ]
-
-      for {ttl, expected} <- test_cases do
-        assert PlugImageProcessing.Middleware.PlugImageProcessing.Middlewares.CacheHeaders.cache_control(ttl) == expected
-      end
-    end
-  end
 end

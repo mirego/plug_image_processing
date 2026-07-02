@@ -39,7 +39,7 @@ defmodule PlugImageProcessing.Mixfile do
     [
       {:plug, "~> 1.0"},
       {:vix, "~> 0.13"},
-      {:hackney, "~> 1.18"},
+      {:hackney, "~> 4.1"},
       {:telemetry, "~> 1.0"},
       {:jason, "~> 1.0"},
       {:telemetry_metrics, "~> 0.6 or ~> 1.0"},

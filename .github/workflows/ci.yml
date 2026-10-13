@@ -7,8 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        otp-version: [27.0]
-        elixir-version: [1.17.1]
+        otp-version: [27.3]
+        elixir-version: [1.18.4]
 
     env:
       MIX_ENV: test
